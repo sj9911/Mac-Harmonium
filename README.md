@@ -79,11 +79,11 @@ shasum -a 256 Mac-Harmonium-1.0.dmg
 
 </details>
 
-## The story
+## Why I built it
 
 I saw [Rocktopus101's Hingemonium](https://github.com/Rocktopus101/Hingemonium) reel years ago, and it just stuck. Every so often it would float back into my head: *someday I want to build that.*
 
-Truth is, I am still learning. And I really believe the best way to learn is by doing, actually building the thing you are excited about, one "wait, how do I..." at a time. This whole app was exactly that, a playground for learning by doing.
+I am a design engineer, so making things look and feel right is my home turf. Real-time audio and reading a hardware sensor, though, were all new to me. And I really believe the best way to learn is by doing, actually building the thing you are excited about, one "wait, how do I..." at a time. This whole app was exactly that, a playground for learning by doing.
 
 What changed is that now, with Claude, the "someday" became a weekend. An idea that lived in my head for years finally had a way out. I am genuinely thankful, and honestly a little giddy, to be building in a time like this.
 
