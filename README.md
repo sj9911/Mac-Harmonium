@@ -33,32 +33,60 @@ Move the lid to pump air, press the keys to play. A harmonium hiding inside your
 
 It is polyphonic, so hold several keys for chords. Notes swell while you pump and fade when you stop. No air, no sound, just like the real thing.
 
-## Install
+## Get it (step by step)
 
-**[Download the latest DMG](https://github.com/sj9911/Mac-Harmonium/releases/latest)**, open it, and drag **Mac Harmonium** into Applications.
+Not a coder? No problem. Here is the whole thing:
 
-It is not notarized by Apple (that needs a paid developer account), so the first time you open it, macOS asks you to confirm:
+1. **[Click here to download Mac Harmonium.](https://github.com/sj9911/Mac-Harmonium/releases/latest/download/Mac-Harmonium-1.0.dmg)** It saves a file called `Mac-Harmonium-1.0.dmg`.
+2. **Double-click** that file. A small window pops open.
+3. **Drag** the Mac Harmonium icon onto the **Applications** folder shown right next to it.
+4. **Opening it the first time:** because I am a solo maker who has not paid Apple's yearly fee, your Mac is a little extra careful the first time. So just this once:
+   - Open your **Applications** folder.
+   - **Right-click** (or hold the **Control** key and click) on **Mac Harmonium**.
+   - Choose **Open**, then click **Open** again in the box that appears.
+   - That is it. From now on you can open it like any other app.
 
-1. Right-click (or Control-click) **Mac Harmonium** in Applications.
-2. Choose **Open**, then **Open** again in the dialog.
+Then move your laptop lid to pump air and press the keys to play. Have fun. 🎶
 
-You only do this once. Prefer to skip it entirely? Build from source (below).
+### Is it safe to install?
 
-### Is it safe?
+Yes, and you do not have to just take my word for it:
 
-Yes, and you do not have to take my word for it:
-
-- **It is fully open source.** Every line is in this repo. Read it, or build it yourself.
-- **Scanned clean by [VirusTotal](https://www.virustotal.com/gui/file/372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5):** 0 of 61 security vendors flagged it.
-- **Verify your download** matches the published checksum:
-  ```bash
-  shasum -a 256 Mac-Harmonium-1.0.dmg
-  # 372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5
-  ```
+- **A virus scan came back completely clean.** [See the VirusTotal report](https://www.virustotal.com/gui/file/372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5): not one of 61 security scanners flagged it.
+- **The whole app is open for anyone to read**, right here on this page.
 
 ### Why the extra right-click?
 
 Apple's notarization runs through their Developer Program, which costs $99 a year. This is a free little thing I made for fun, so I have not signed up for that yet. If it ever grows into something people genuinely use and it feels worth it, I would love to get it properly notarized down the line. Until then, thank you for bearing with the one-time right-click. It really does mean a lot. 🙏
+
+<details>
+<summary><b>For developers (Homebrew, build from source, checksum)</b></summary>
+
+<br/>
+
+**Homebrew** (installs with no Gatekeeper prompt):
+
+```bash
+brew install --cask sj9911/tap/mac-harmonium
+```
+
+**Build from source:**
+
+```bash
+swift build
+swift run
+```
+
+Or open `Package.swift` in Xcode and press ⌘R.
+
+**Verify the download** matches the published checksum:
+
+```bash
+shasum -a 256 Mac-Harmonium-1.0.dmg
+# 372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5
+```
+
+</details>
 
 ## The story
 
@@ -106,15 +134,6 @@ flowchart LR
 - macOS 26 or later
 - A MacBook with a **lid angle sensor** (MacBook Pro 16-inch 2019, Apple Silicon MacBook Pro, and MacBook Air M2 and later)
 - No sensor? You can still play by dragging the bellows with your mouse.
-
-## Build and run
-
-```bash
-swift build
-swift run
-```
-
-Or open `Package.swift` in Xcode and press ⌘R.
 
 ## With thanks to
 
