@@ -4,7 +4,7 @@ Your MacBook *is* the harmonium. The **lid is the bellows** — move it to pump 
 
 Built with Swift + SwiftUI for macOS, for fun.
 
-![Mac Harmonium](Sources/Harmonium/Resources/AppIcon.png)
+![Mac Harmonium](docs/hero.webp)
 
 ## How to play
 
