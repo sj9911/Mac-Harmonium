@@ -8,9 +8,9 @@ enum Credits {
     static let version = "v1.0"
     static let name = "Sunny Joshi"
 
-    static let github   = URL(string: "https://github.com/your-username")!
-    static let linkedin = URL(string: "https://www.linkedin.com/in/your-username")!
-    static let website  = URL(string: "https://your-website.com")!
+    static let github   = URL(string: "https://github.com/sj9911")!
+    static let linkedin = URL(string: "https://www.linkedin.com/in/thesunnyjoshi/")!
+    static let website  = URL(string: "https://sunnyjoshi.com/?utm_source=mac-harmonium-credits")!
 
     // With thanks to
     static let lidAngleSensor = URL(string: "https://github.com/samhenrigold/LidAngleSensor")!
