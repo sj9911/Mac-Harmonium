@@ -35,29 +35,20 @@ It is polyphonic, so hold several keys for chords. Notes swell while you pump an
 
 ## Install
 
-It takes about a minute:
+1. **[Download Mac Harmonium](https://github.com/sj9911/Mac-Harmonium/releases/latest/download/Mac-Harmonium-1.0.dmg)** (`Mac-Harmonium-1.0.dmg`).
+2. Open the file and drag **Mac Harmonium** into your **Applications** folder.
+3. **First launch:** right-click the app, choose **Open**, then **Open** again. macOS asks this once for apps from independent makers; after that it opens normally.
 
-1. **[Download Mac Harmonium.](https://github.com/sj9911/Mac-Harmonium/releases/latest/download/Mac-Harmonium-1.0.dmg)** It saves a file called `Mac-Harmonium-1.0.dmg`.
-2. **Double-click** that file. A small window pops open.
-3. **Drag** the Mac Harmonium icon onto the **Applications** folder shown right next to it.
-4. **Opening it the first time:** because I am a solo maker who has not paid Apple's yearly fee, your Mac is a little extra careful the first time. So just this once:
-   - Open your **Applications** folder.
-   - **Right-click** (or hold the **Control** key and click) on **Mac Harmonium**.
-   - Choose **Open**, then click **Open** again in the box that appears.
-   - That is it. From now on you can open it like any other app.
+### Is it safe?
 
-Then move your laptop lid to pump air and press the keys to play. Have fun. 🎶
+Yes, and you don't have to take my word for it:
 
-### Is it safe to install?
+- **VirusTotal scan came back clean.** [Full report](https://www.virustotal.com/gui/file/372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5): 0 of 61 scanners flagged it.
+- **It's fully open source.** Every line is right here to read.
 
-Yes, and you do not have to just take my word for it:
+### Why the right-click?
 
-- **A virus scan came back completely clean.** [See the VirusTotal report](https://www.virustotal.com/gui/file/372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5): not one of 61 security scanners flagged it.
-- **The whole app is open for anyone to read**, right here on this page.
-
-### Why the extra right-click?
-
-Apple's notarization runs through their Developer Program, which costs $99 a year. This is a free little thing I made for fun, so I have not signed up for that yet. If it ever grows into something people genuinely use and it feels worth it, I would love to get it properly notarized down the line. Until then, thank you for bearing with the one-time right-click. It really does mean a lot. 🙏
+Apple's notarization needs their Developer Program, which runs $99 a year. This is a free project I built for fun, so I haven't signed up yet. If it grows into something people genuinely use and it feels worth it, I'd happily get it notarized. Until then, thanks for bearing with the one-time right-click. 🙏
 
 <details>
 <summary><b>For developers (Homebrew, build from source, checksum)</b></summary>
