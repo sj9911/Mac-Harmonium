@@ -2,11 +2,9 @@ import SwiftUI
 
 // Loads the harmonium PNGs bundled as package resources.
 enum HarmoniumAssets {
-    // Native pixel dimensions — all share the same 1444px width.
-    static let nativeWidth: CGFloat = 1444
+    // Aspect ratios (height / width); all the images share the same 1444px width.
     static let baseAspect: CGFloat = 850.0 / 1444.0    // base + key overlays
     static let top2Aspect: CGFloat = 55.0 / 1444.0     // bellows top cap
-    static let bellowAspect: CGFloat = 33.0 / 1444.0   // one bellows stripe (native)
 
     static let base = image("base", subdirectory: "Resources")
     static let top2 = image("top2", subdirectory: "Resources")
@@ -21,7 +19,7 @@ enum HarmoniumAssets {
            let nsImage = NSImage(contentsOf: url) {
             return Image(nsImage: nsImage)
         }
-        print("[Harmonium] Missing asset: \(subdirectory)/\(name).png")
+        print("[Mac Harmonium] Missing asset: \(subdirectory)/\(name).png")
         return Image(systemName: "questionmark.square")
     }
 }

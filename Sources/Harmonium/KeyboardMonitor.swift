@@ -4,6 +4,7 @@ final class KeyboardMonitor: ObservableObject {
     @Published private(set) var pressedNotes: Set<Int> = []
 
     private var localMonitor: Any?
+    private var resignObserver: NSObjectProtocol?
 
     // ADB key codes: H=4, G=5 (counterintuitive but correct)
     private static let keyToNote: [UInt16: Int] = [
@@ -17,34 +18,39 @@ final class KeyboardMonitor: ObservableObject {
     ]
 
     init() {
-        // Start immediately — don't wait for onAppear
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
-            guard let self else { return event }
-            // Only intercept our note keys without modifier keys
+            guard let self, let note = Self.keyToNote[event.keyCode] else { return event }
+
+            if event.type == .keyUp {
+                // Always release a note we started, even if a modifier is now held
+                // (e.g. the key is let go while reaching for Cmd-Tab). Otherwise it sticks.
+                guard self.pressedNotes.contains(note) else { return event }
+                self.pressedNotes.remove(note)
+                return nil
+            }
+
+            // keyDown: don't hijack modifier combos (Cmd-Q, Cmd-Tab, and friends).
             let hasModifier = !event.modifierFlags.intersection([.command, .control, .option]).isEmpty
-            guard Self.keyToNote[event.keyCode] != nil, !hasModifier else { return event }
-            self.handle(event)
+            guard !hasModifier else { return event }
+            if !event.isARepeat { self.pressedNotes.insert(note) }
             return nil  // consume the event so the macOS accent popup never appears
+        }
+
+        // If the app loses focus mid-press, the keyUp never arrives — clear held notes.
+        resignObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            self?.pressedNotes.removeAll()
         }
     }
 
     deinit {
-        if let monitor = localMonitor {
-            NSEvent.removeMonitor(monitor)
-        }
+        if let localMonitor { NSEvent.removeMonitor(localMonitor) }
+        if let resignObserver { NotificationCenter.default.removeObserver(resignObserver) }
     }
 
-    // Called from ContentView.onAppear — monitoring is already running, these are no-ops
+    // Monitoring starts in init and lives for the app's lifetime; these keep the
+    // ContentView call sites simple.
     func start() {}
     func stop() {}
-
-    private func handle(_ event: NSEvent) {
-        guard let noteIndex = Self.keyToNote[event.keyCode] else { return }
-        if event.type == .keyDown {
-            guard !event.isARepeat else { return }
-            pressedNotes.insert(noteIndex)
-        } else {
-            pressedNotes.remove(noteIndex)
-        }
-    }
 }

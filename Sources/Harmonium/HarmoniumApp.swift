@@ -8,7 +8,6 @@ struct HarmoniumApp: App {
     @StateObject private var keyboardMonitor = KeyboardMonitor()
 
     init() {
-        setvbuf(stdout, nil, _IONBF, 0)   // unbuffered logs for debugging
         setDockIcon()
     }
 

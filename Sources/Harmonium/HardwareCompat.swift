@@ -193,7 +193,7 @@ struct LASDiagnostic {
             hardwareSupport: model.hardwareSupport(),
             probeResult: MacModelInfo.probeSensor()
         )
-        print("[Harmonium] Model: \(model.identifier), sensor: \(diag.probeResult)")
+        print("[Mac Harmonium] Model: \(model.identifier), sensor: \(diag.probeResult)")
         return diag
     }()
 

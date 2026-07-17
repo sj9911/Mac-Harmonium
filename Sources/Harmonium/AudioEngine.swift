@@ -182,8 +182,7 @@ private final class DSPState {
 
 @Observable
 final class AudioEngine {
-    static let noteNames = ["Sa", "Re", "Ga", "Ma", "Pa", "Dha", "Ni"]
-    static let keyLabels  = ["A",  "S",  "D",  "F",  "G",  "H",  "J"]
+    // Sargam scale starting at Sa = C4. Index maps to keys A S D F G H J.
     static let frequencies: [Double] = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88]
 
     private let engine = AVAudioEngine()
@@ -256,7 +255,16 @@ final class AudioEngine {
         do {
             try engine.start()
         } catch {
-            print("[Harmonium] Audio engine failed to start: \(error)")
+            print("[Mac Harmonium] Audio engine failed to start: \(error)")
+        }
+
+        // Restart the engine if the audio route changes (e.g. headphones plugged in),
+        // which otherwise stops it and leaves the app silent.
+        NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main
+        ) { [weak self] _ in
+            guard let self, !self.engine.isRunning else { return }
+            try? self.engine.start()
         }
     }
 }
