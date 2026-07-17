@@ -10,10 +10,13 @@ struct ContentView: View {
     @State private var idleSeconds = 0.0
     private let idleTick = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
 
-    // Hint: shown when the user taps keys but isn't pumping (so there's no sound)
+    // Hint: shown when the user taps keys but isn't pumping (so there's no sound).
+    // Shows for a few seconds, then hides with a 30s cooldown before it can reappear.
     @State private var showHint = false
     @State private var silentTaps = 0
     @State private var emptyTicks = 0
+    @State private var hintTicks = 0        // how long it's been shown (idleTicks)
+    @State private var cooldownTicks = 0    // remaining cooldown (idleTicks)
 
     // Mouse-drag bellows control (a synthetic "tilt" the mouse can drive)
     @State private var manualMode = false     // mouse is driving instead of the sensor
@@ -61,7 +64,10 @@ struct ContentView: View {
                     if !dragging { dragging = true; dragStartOpen = openness }
                     manualMode = true
                     dragOpen = min(max(dragStartOpen + Double(-th) / 180.0, 0), 1)
-                    dragVel = min(max(Double(-vh) / 40.0, -20), 20)
+                    // Pump the velocity UP toward the drag speed, but never drop it
+                    // instantly — let pumpTick decay it slowly (so it lingers like the lid).
+                    let target = min(max(Double(-vh) / 30.0, -26), 26)
+                    if abs(target) > abs(dragVel) { dragVel = target }
                 },
                 onDragEnd: { dragging = false }
             )
@@ -85,12 +91,14 @@ struct ContentView: View {
         .background(WindowConfigurator())
         .onReceive(pumpTick) { _ in
             if manualMode {
-                dragVel *= 0.82                          // air fades when the drag stops moving
-                if abs(dragVel) < 0.06 { dragVel = 0 }
+                dragVel *= 0.991                             // slow, lingering air fade
+                if abs(dragVel) < 0.03 { dragVel = 0 }
                 if lid.velocity > 3 { manualMode = false }   // real lid takes over
             }
             let vmag = manualMode ? abs(dragVel) : lid.velocity
-            audio.airPressure = Float(min(vmag / 18.0, 1.0))
+            // Drag is more sensitive (/15) than the lid (/18) so small pumps give volume.
+            let scale = manualMode ? 15.0 : 18.0
+            audio.airPressure = Float(min(vmag / scale, 1.0))
         }
         .onReceive(idleTick) { _ in
             // Active = lid moving, key held, or mouse-dragging the bellows.
@@ -103,27 +111,34 @@ struct ContentView: View {
                 if idleSeconds >= 1.5 { isIdle = true }
             }
 
-            // Dismiss the hint once they pump; auto-hide after a while of no playing.
-            if lid.velocity > 2.5 {
-                silentTaps = 0; emptyTicks = 0
-                if showHint { withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { showHint = false } }
+            // Hint lifecycle (idleTick = 0.25s): show ~4s, then 30s cooldown.
+            if showHint {
+                hintTicks += 1
+                if hintTicks >= 16 || audio.airPressure > 0.08 {   // ~4s, or they started pumping
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { showHint = false }
+                    cooldownTicks = 120   // 30s before it can appear again
+                    silentTaps = 0
+                }
+            } else if cooldownTicks > 0 {
+                cooldownTicks -= 1
+                silentTaps = 0
             } else if keys.pressedNotes.isEmpty {
                 emptyTicks += 1
                 if emptyTicks >= 4 { silentTaps = 0 }   // ~1s without a tap → reset the counter
-                if emptyTicks >= 12 && showHint {        // ~3s idle → tuck it away
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { showHint = false }
-                }
             } else {
                 emptyTicks = 0
             }
         }
         .onChange(of: keys.pressedNotes) { old, notes in
             audio.activeNotes = notes
-            // A new key pressed with no air → count it; several in a row shows the hint.
-            if notes.count > old.count && lid.velocity < 2.5 {
+            // A new key pressed with no air (from lid OR mouse) → count it; several in a
+            // row shows the hint, unless we're already showing it or in cooldown.
+            if notes.count > old.count && audio.airPressure < 0.08 && !showHint && cooldownTicks == 0 {
                 silentTaps += 1
-                if silentTaps >= 4 && !showHint {
+                if silentTaps >= 4 {
                     withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { showHint = true }
+                    hintTicks = 0
+                    silentTaps = 0
                 }
             }
         }
@@ -473,6 +488,7 @@ struct HarmoniumView: View {
 
     // Enables the spring only after first layout, so there's no "grow-in" on launch.
     @State private var animate = false
+    @State private var grabbing = false   // for the grab cursor while dragging the bellows
 
     // Bellows height as a fraction of image width.
     private static let bellowsMin: CGFloat = 0.03
@@ -523,10 +539,17 @@ struct HarmoniumView: View {
                     .frame(height: bellowsHeight)
                 }
                 .contentShape(Rectangle())
+                .pointerStyle(grabbing ? .grabActive : .grabIdle)   // open hand → grab
                 .gesture(
                     DragGesture(minimumDistance: 2)
-                        .onChanged { v in onDragChange(v.translation.height, v.velocity.height) }
-                        .onEnded { _ in onDragEnd() }
+                        .onChanged { v in
+                            grabbing = true
+                            onDragChange(v.translation.height, v.velocity.height)
+                        }
+                        .onEnded { _ in
+                            grabbing = false
+                            onDragEnd()
+                        }
                 )
 
                 // Base body with pressed-key overlays
