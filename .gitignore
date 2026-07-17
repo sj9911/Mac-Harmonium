@@ -12,3 +12,6 @@ DerivedData/
 
 # Editor
 .vscode/
+
+# Packaging output
+dist/
