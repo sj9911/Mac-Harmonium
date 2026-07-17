@@ -9,6 +9,7 @@ Move the lid to pump air, press the keys to play. A harmonium hiding inside your
 ![Platform](https://img.shields.io/badge/platform-macOS%2026%2B-000000?style=flat-square)
 ![Swift](https://img.shields.io/badge/Swift-6.2-F05138?style=flat-square&logo=swift&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-2E7DFF?style=flat-square)
+[![VirusTotal](https://img.shields.io/badge/VirusTotal-0%2F61%20clean-3BD671?style=flat-square)](https://www.virustotal.com/gui/file/372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5)
 ![Stars](https://img.shields.io/github/stars/sj9911/Mac-Harmonium?style=flat-square&color=E11D2A)
 ![Vibecoded with Claude](https://img.shields.io/badge/vibecoded%20with-Claude-D97757?style=flat-square)
 
@@ -31,6 +32,29 @@ Move the lid to pump air, press the keys to play. A harmonium hiding inside your
 </div>
 
 It is polyphonic, so hold several keys for chords. Notes swell while you pump and fade when you stop. No air, no sound, just like the real thing.
+
+## Install
+
+**[Download the latest DMG](https://github.com/sj9911/Mac-Harmonium/releases/latest)**, open it, and drag **Mac Harmonium** into Applications.
+
+It is not notarized by Apple (that needs a paid developer account), so the first time you open it, macOS asks you to confirm:
+
+1. Right-click (or Control-click) **Mac Harmonium** in Applications.
+2. Choose **Open**, then **Open** again in the dialog.
+
+You only do this once. Prefer to skip it entirely? Build from source (below).
+
+### Is it safe?
+
+Yes, and you do not have to take my word for it:
+
+- **It is fully open source.** Every line is in this repo. Read it, or build it yourself.
+- **Scanned clean by [VirusTotal](https://www.virustotal.com/gui/file/372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5):** 0 of 61 security vendors flagged it.
+- **Verify your download** matches the published checksum:
+  ```bash
+  shasum -a 256 Mac-Harmonium-1.0.dmg
+  # 372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5
+  ```
 
 ## The story
 
