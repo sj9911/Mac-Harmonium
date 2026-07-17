@@ -33,11 +33,11 @@ Move the lid to pump air, press the keys to play. A harmonium hiding inside your
 
 It is polyphonic, so hold several keys for chords. Notes swell while you pump and fade when you stop. No air, no sound, just like the real thing.
 
-## Get it (step by step)
+## Install
 
-Not a coder? No problem. Here is the whole thing:
+It takes about a minute:
 
-1. **[Click here to download Mac Harmonium.](https://github.com/sj9911/Mac-Harmonium/releases/latest/download/Mac-Harmonium-1.0.dmg)** It saves a file called `Mac-Harmonium-1.0.dmg`.
+1. **[Download Mac Harmonium.](https://github.com/sj9911/Mac-Harmonium/releases/latest/download/Mac-Harmonium-1.0.dmg)** It saves a file called `Mac-Harmonium-1.0.dmg`.
 2. **Double-click** that file. A small window pops open.
 3. **Drag** the Mac Harmonium icon onto the **Applications** folder shown right next to it.
 4. **Opening it the first time:** because I am a solo maker who has not paid Apple's yearly fee, your Mac is a little extra careful the first time. So just this once:
