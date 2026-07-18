@@ -5,8 +5,8 @@ set -euo pipefail
 APP_NAME="Mac Harmonium"
 EXEC_NAME="Harmonium"
 BUNDLE_ID="com.sunnyjoshi.MacHarmonium"
-VERSION="1.0"
-BUILD="1"
+VERSION="1.1"
+BUILD="2"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ICON_SRC="$ROOT/Sources/Harmonium/Resources/AppIcon.png"
@@ -53,7 +53,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 	<key>CFBundlePackageType</key><string>APPL</string>
 	<key>CFBundleShortVersionString</key><string>$VERSION</string>
 	<key>CFBundleVersion</key><string>$BUILD</string>
-	<key>LSMinimumSystemVersion</key><string>26.0</string>
+	<key>LSMinimumSystemVersion</key><string>14.0</string>
 	<key>NSHighResolutionCapable</key><true/>
 	<key>LSApplicationCategoryType</key><string>public.app-category.music</string>
 </dict>
@@ -65,7 +65,7 @@ xattr -cr "$APP"                      # strip extended attributes that block sig
 codesign --force --deep --sign - "$APP"
 
 echo "==> Creating DMG"
-DMG="$DIST/Mac-Harmonium-$VERSION.dmg"
+DMG="$DIST/Mac-Harmonium.dmg"
 STAGING="$DIST/staging"
 mkdir -p "$STAGING"
 cp -R "$APP" "$STAGING/"

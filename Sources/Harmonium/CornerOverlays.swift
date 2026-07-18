@@ -5,7 +5,7 @@ import AppKit
 //
 // 👉 Fill these in with your real name and links.
 enum Credits {
-    static let version = "v1.0"
+    static let version = "v1.1"
     static let name = "Sunny Joshi"
 
     static let github   = URL(string: "https://github.com/sj9911")!
@@ -52,7 +52,7 @@ struct HintBanner: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .glassEffect(.regular, in: .capsule)
+        .liquidGlass(in: Capsule())
     }
 }
 
@@ -66,7 +66,7 @@ struct VersionBadge: View {
             .foregroundStyle(.black.opacity(0.4))
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .glassEffect(.regular, in: .capsule)
+            .liquidGlass(in: Capsule())
     }
 }
 
@@ -123,7 +123,7 @@ struct CreditBadge: View {
             .frame(width: 17, height: 17)
             .foregroundStyle(.black.opacity(hovering ? 0.75 : 0.5))
             .frame(width: 34, height: 34)
-            .glassEffect(.regular.interactive(), in: .circle)
+            .liquidGlass(in: Circle(), interactive: true)
     }
 
     private var card: some View {
@@ -181,7 +181,7 @@ struct CreditBadge: View {
         }
         .padding(22)
         .frame(width: 288, alignment: .leading)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
+        .liquidGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
 
@@ -225,7 +225,7 @@ private struct LinkIcon: View {
                 .frame(width: 18, height: 18)
                 .foregroundStyle(.black.opacity(hovering ? 0.95 : 0.6))
                 .frame(width: 40, height: 40)
-                .glassEffect(.regular.interactive(), in: .circle)
+                .liquidGlass(in: Circle(), interactive: true)
                 .scaleEffect(hovering ? 1.08 : 1.0)
         }
         .buttonStyle(.plain)

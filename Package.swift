@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Harmonium",
-    platforms: [.macOS(.v26)],   // Liquid Glass (.glassEffect) requires macOS 26
+    platforms: [.macOS(.v14)],   // Sonoma+. Liquid Glass shows on macOS 26, frosted fallback below.
     products: [
         .executable(name: "Harmonium", targets: ["Harmonium"])
     ],

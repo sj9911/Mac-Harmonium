@@ -36,7 +36,7 @@ struct ContentView: View {
         ZStack {
             // Apple Liquid Glass over the transparent window
             Color.clear
-                .glassEffect(.regular, in: Rectangle())
+                .liquidGlass(in: Rectangle())
                 .ignoresSafeArea()
 
             // Light wash — keeps the backdrop light regardless of desktop / dark mode
@@ -539,7 +539,7 @@ struct HarmoniumView: View {
                     .frame(height: bellowsHeight)
                 }
                 .contentShape(Rectangle())
-                .pointerStyle(grabbing ? .grabActive : .grabIdle)   // open hand → grab
+                .grabPointer(grabbing)
                 .gesture(
                     DragGesture(minimumDistance: 2)
                         .onChanged { v in

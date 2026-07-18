@@ -6,10 +6,10 @@
 
 Move the lid to pump air, press the keys to play. A harmonium hiding inside your MacBook.
 
-![Platform](https://img.shields.io/badge/platform-macOS%2026%2B-000000?style=flat-square)
+![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-000000?style=flat-square)
 ![Swift](https://img.shields.io/badge/Swift-6.2-F05138?style=flat-square&logo=swift&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-2E7DFF?style=flat-square)
-[![VirusTotal](https://img.shields.io/badge/VirusTotal-0%2F61%20clean-3BD671?style=flat-square)](https://www.virustotal.com/gui/file/372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5)
+[![VirusTotal](https://img.shields.io/badge/VirusTotal-0%2F61%20clean-3BD671?style=flat-square)](https://www.virustotal.com/gui/file/b964469550bd628a92962f8e150afdf900f1294743e6ac574291ce03606363a0)
 ![Stars](https://img.shields.io/github/stars/sj9911/Mac-Harmonium?style=flat-square&color=E11D2A)
 ![Vibecoded with Claude](https://img.shields.io/badge/vibecoded%20with-Claude-D97757?style=flat-square)
 
@@ -35,7 +35,7 @@ It is polyphonic, so hold several keys for chords. Notes swell while you pump an
 
 ## Install
 
-1. **[Download Mac Harmonium](https://github.com/sj9911/Mac-Harmonium/releases/latest/download/Mac-Harmonium-1.0.dmg)** (`Mac-Harmonium-1.0.dmg`).
+1. **[Download Mac Harmonium](https://github.com/sj9911/Mac-Harmonium/releases/latest/download/Mac-Harmonium.dmg)** (`Mac-Harmonium.dmg`).
 2. Open the file and drag **Mac Harmonium** into your **Applications** folder.
 3. **First launch:** right-click the app, choose **Open**, then **Open** again. macOS asks this once for apps from independent makers; after that it opens normally.
 
@@ -43,7 +43,7 @@ It is polyphonic, so hold several keys for chords. Notes swell while you pump an
 
 Yes, and you don't have to take my word for it:
 
-- **VirusTotal scan came back clean.** [Full report](https://www.virustotal.com/gui/file/372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5): 0 of 61 scanners flagged it.
+- **VirusTotal scan came back clean.** [Full report](https://www.virustotal.com/gui/file/b964469550bd628a92962f8e150afdf900f1294743e6ac574291ce03606363a0): 0 of 61 scanners flagged it.
 - **It's fully open source.** Every line is right here to read.
 
 ### Why the right-click?
@@ -73,8 +73,8 @@ Or open `Package.swift` in Xcode and press ⌘R.
 **Verify the download** matches the published checksum:
 
 ```bash
-shasum -a 256 Mac-Harmonium-1.0.dmg
-# 372ac462fbf6278ccd52e279542f3bc6aa84115c26ddaa4a0c6dd0b50eec6af5
+shasum -a 256 Mac-Harmonium.dmg
+# b964469550bd628a92962f8e150afdf900f1294743e6ac574291ce03606363a0
 ```
 
 </details>
@@ -122,7 +122,7 @@ flowchart LR
 
 ## Requirements
 
-- macOS 26 or later
+- macOS 14 (Sonoma) or later. The Liquid Glass look shows on macOS 26; older versions get a frosted fallback.
 - A MacBook with a **lid angle sensor** (MacBook Pro 16-inch 2019, Apple Silicon MacBook Pro, and MacBook Air M2 and later)
 - No sensor? You can still play by dragging the bellows with your mouse.
 
