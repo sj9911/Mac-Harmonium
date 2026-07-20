@@ -15,6 +15,10 @@ Move the lid to pump air, press the keys to play. A harmonium hiding inside your
 
 ![Mac Harmonium](docs/hero.webp)
 
+### [⬇&#xFE0E; Download for macOS](https://github.com/sj9911/Mac-Harmonium/releases/latest/download/Mac-Harmonium.dmg)
+
+<sub>macOS 14+ · free · open source</sub>
+
 </div>
 
 ## How to play

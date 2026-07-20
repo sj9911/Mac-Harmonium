@@ -28,4 +28,14 @@ extension View {
             self
         }
     }
+
+    /// Pointing-hand cursor (signals "clickable") on macOS 15+; no-op on macOS 14.
+    @ViewBuilder
+    func handPointer() -> some View {
+        if #available(macOS 15.0, *) {
+            pointerStyle(.link)
+        } else {
+            self
+        }
+    }
 }

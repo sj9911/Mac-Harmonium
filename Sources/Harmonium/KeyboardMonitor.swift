@@ -53,4 +53,8 @@ final class KeyboardMonitor: ObservableObject {
     // ContentView call sites simple.
     func start() {}
     func stop() {}
+
+    // Mouse-driven presses (clicking the on-screen keys).
+    func press(_ note: Int) { pressedNotes.insert(note) }
+    func release(_ note: Int) { pressedNotes.remove(note) }
 }

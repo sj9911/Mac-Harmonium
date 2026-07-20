@@ -5,7 +5,7 @@ import AppKit
 //
 // 👉 Fill these in with your real name and links.
 enum Credits {
-    static let version = "v1.1"
+    static let version = "v1.2"
     static let name = "Sunny Joshi"
 
     static let github   = URL(string: "https://github.com/sj9911")!

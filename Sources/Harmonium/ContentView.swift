@@ -6,6 +6,10 @@ struct ContentView: View {
     @Environment(LidSensor.self) private var lid
     @EnvironmentObject private var keys: KeyboardMonitor
 
+    // First-run welcome (shown once, remembered in UserDefaults). It carries its own
+    // blurred copy of the instrument and fades to reveal the live, sharp one.
+    @State private var showWelcome = !UserDefaults.standard.bool(forKey: "didSeeWelcome_v1")
+
     @State private var isIdle = false
     @State private var idleSeconds = 0.0
     private let idleTick = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
@@ -69,7 +73,9 @@ struct ContentView: View {
                     let target = min(max(Double(-vh) / 30.0, -26), 26)
                     if abs(target) > abs(dragVel) { dragVel = target }
                 },
-                onDragEnd: { dragging = false }
+                onDragEnd: { dragging = false },
+                onKeyDown: { keys.press($0) },
+                onKeyUp: { keys.release($0) }
             )
             .padding(.horizontal, 64)
             .padding(.top, 56)
@@ -83,10 +89,18 @@ struct ContentView: View {
             }
         }
         .overlay(alignment: .bottomLeading) {
-            VersionBadge().padding(18)
+            if !showWelcome { VersionBadge().padding(18) }
         }
         .overlay(alignment: .bottomTrailing) {
-            CreditBadge().padding(18)
+            if !showWelcome { CreditBadge().padding(18) }
+        }
+        .overlay {
+            if showWelcome {
+                WelcomeView {
+                    UserDefaults.standard.set(true, forKey: "didSeeWelcome_v1")
+                    showWelcome = false
+                }
+            }
         }
         .background(WindowConfigurator())
         .onReceive(pumpTick) { _ in
@@ -358,6 +372,7 @@ struct TiltGlow: View {
 struct DotsField: View {
     var lidAngle: Double           // smoothed angle — drives directional drift
     var pressedNotes: Set<Int>
+    var restOpacity: Double = 0.06 // resting dot opacity (welcome bumps this up)
 
     @State private var ripples: [Ripple] = []
     @State private var prevNotes: Set<Int> = []
@@ -403,7 +418,7 @@ struct DotsField: View {
                     var x = spacing / 2
                     while x < size.width {
                         // Neutral resting field
-                        var opacity = 0.06
+                        var opacity = restOpacity
                         var scale = 1.0
                         var dx: CGFloat = 0, dy: CGFloat = 0        // displacement
                         var cr = 0.0, cg = 0.0, cb = 0.0, cw = 0.0  // weighted color accumulation
@@ -485,6 +500,13 @@ struct HarmoniumView: View {
     // Drag on the top cap / bellows → (vertical translation, vertical velocity), and end.
     var onDragChange: (CGFloat, CGFloat) -> Void = { _, _ in }
     var onDragEnd: () -> Void = {}
+    // Clicking the on-screen keys (0…6).
+    var onKeyDown: (Int) -> Void = { _ in }
+    var onKeyUp: (Int) -> Void = { _ in }
+
+    // Key label x-centers (fraction of base width), measured from the artwork.
+    private static let keyCenterX0: CGFloat = 0.244
+    private static let keySpacing: CGFloat = 0.081
 
     // Enables the spring only after first layout, so there's no "grow-in" on launch.
     @State private var animate = false
@@ -564,6 +586,24 @@ struct HarmoniumView: View {
                             .frame(width: width, height: width * HarmoniumAssets.baseAspect)
                             .opacity(pressedNotes.contains(i) ? 1 : 0)
                             .animation(.easeOut(duration: 0.06), value: pressedNotes.contains(i))
+                    }
+
+                    // Invisible click targets over each key — play with the mouse too.
+                    let baseH = width * HarmoniumAssets.baseAspect
+                    ForEach(0..<7, id: \.self) { i in
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .frame(width: Self.keySpacing * width, height: 0.34 * baseH)
+                            .position(
+                                x: (Self.keyCenterX0 + CGFloat(i) * Self.keySpacing) * width,
+                                y: 0.725 * baseH
+                            )
+                            .handPointer()
+                            .gesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { _ in onKeyDown(i) }
+                                    .onEnded { _ in onKeyUp(i) }
+                            )
                     }
                 }
             }

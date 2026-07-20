@@ -5,8 +5,8 @@ set -euo pipefail
 APP_NAME="Mac Harmonium"
 EXEC_NAME="Harmonium"
 BUNDLE_ID="com.sunnyjoshi.MacHarmonium"
-VERSION="1.1"
-BUILD="2"
+VERSION="1.2"
+BUILD="3"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ICON_SRC="$ROOT/Sources/Harmonium/Resources/AppIcon.png"
