@@ -49,7 +49,14 @@ It is polyphonic, so hold several keys for chords. Notes swell while you pump an
 
    Now open Mac Harmonium from your Applications folder like any other app.
 
-   Prefer not to touch Terminal? Double-click the app once so macOS blocks it, then open **System Settings > Privacy & Security**, scroll to the bottom, and click **Open Anyway**.
+   **Prefer not to touch Terminal?** Use macOS's built-in override instead:
+
+   1. Double-click **Mac Harmonium** in Applications. macOS blocks it and shows a dialog offering only **Done** or **Move to Trash**. Click **Done** (do not move it to Trash).
+   2. Open **System Settings**, then go to **Privacy & Security**.
+   3. Scroll down to the **Security** section. You will see a line like "Mac Harmonium was blocked to protect your Mac." with an **Open Anyway** button beside it. Click **Open Anyway**.
+   4. Confirm with Touch ID or your password, then click **Open Anyway** once more in the final dialog.
+
+   That **Open Anyway** button only appears for about an hour after the app is blocked, so do this right after step 1. Once you open it this way, Mac Harmonium launches normally every time after.
 
 ### Is it safe?
 
