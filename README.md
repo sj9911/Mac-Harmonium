@@ -41,7 +41,15 @@ It is polyphonic, so hold several keys for chords. Notes swell while you pump an
 
 1. **[Download Mac Harmonium](https://github.com/sj9911/Mac-Harmonium/releases/latest/download/Mac-Harmonium.dmg)** (`Mac-Harmonium.dmg`).
 2. Open the file and drag **Mac Harmonium** into your **Applications** folder.
-3. **First launch:** right-click the app, choose **Open**, then **Open** again. macOS asks this once for apps from independent makers; after that it opens normally.
+3. **Open it the first time.** Because the app is not notarized (more on that below), macOS quarantines it on download. Clear that in one step: open **Terminal** (press Cmd+Space, type `Terminal`, press Return), paste the line below, and press Return:
+
+   ```bash
+   xattr -dr com.apple.quarantine "/Applications/Mac Harmonium.app"
+   ```
+
+   Now open Mac Harmonium from your Applications folder like any other app.
+
+   Prefer not to touch Terminal? Double-click the app once so macOS blocks it, then open **System Settings > Privacy & Security**, scroll to the bottom, and click **Open Anyway**.
 
 ### Is it safe?
 
@@ -50,9 +58,9 @@ Yes, and you don't have to take my word for it:
 - **VirusTotal scan came back clean.** [Full report](https://www.virustotal.com/gui/file/b964469550bd628a92962f8e150afdf900f1294743e6ac574291ce03606363a0): 0 of 61 scanners flagged it.
 - **It's fully open source.** Every line is right here to read.
 
-### Why the right-click?
+### Why the extra step?
 
-Apple's notarization needs their Developer Program, which runs $99 a year. This is a free project I built for fun, so I haven't signed up yet. If it grows into something people genuinely use and it feels worth it, I'd happily get it notarized. Until then, thanks for bearing with the one-time right-click. 🙏
+Apple's notarization needs their Developer Program, which runs $99 a year. This is a free project I built for fun, so I haven't signed up yet. Recent versions of macOS also removed the old right-click and Open shortcut, so the one-line Terminal command above is the most reliable way in. If it grows into something people genuinely use and it feels worth it, I'd happily get it notarized. Thanks for bearing with it. 🙏
 
 <details>
 <summary><b>For developers (Homebrew, build from source, checksum)</b></summary>
