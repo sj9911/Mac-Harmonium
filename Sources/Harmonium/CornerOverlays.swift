@@ -5,7 +5,7 @@ import AppKit
 //
 // 👉 Fill these in with your real name and links.
 enum Credits {
-    static let version = "v1.2"
+    static let version = "v1.2.1"
     static let name = "Sunny Joshi"
 
     static let github   = URL(string: "https://github.com/sj9911")!
@@ -19,7 +19,7 @@ enum Credits {
 
 // Loads a bundled Tabler SVG as a tintable template image.
 private func tablerIcon(_ name: String) -> Image {
-    if let url = Bundle.module.url(forResource: name, withExtension: "svg", subdirectory: "Resources/Icons"),
+    if let url = AppResources.url(name, ext: "svg", subdirectory: "Resources/Icons"),
        let nsImage = NSImage(contentsOf: url) {
         nsImage.isTemplate = true
         return Image(nsImage: nsImage)
@@ -29,7 +29,7 @@ private func tablerIcon(_ name: String) -> Image {
 
 // Loads a bundled PNG (e.g. the avatar).
 private func creditImage(_ name: String) -> Image {
-    if let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Resources"),
+    if let url = AppResources.url(name, ext: "png", subdirectory: "Resources"),
        let nsImage = NSImage(contentsOf: url) {
         return Image(nsImage: nsImage)
     }

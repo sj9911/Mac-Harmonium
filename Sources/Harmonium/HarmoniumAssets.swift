@@ -15,7 +15,7 @@ enum HarmoniumAssets {
     static let keys: [Image] = keyFiles.map { image($0, subdirectory: "Resources/Keys") }
 
     private static func image(_ name: String, subdirectory: String) -> Image {
-        if let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: subdirectory),
+        if let url = AppResources.url(name, ext: "png", subdirectory: subdirectory),
            let nsImage = NSImage(contentsOf: url) {
             return Image(nsImage: nsImage)
         }

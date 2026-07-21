@@ -5,8 +5,8 @@ set -euo pipefail
 APP_NAME="Mac Harmonium"
 EXEC_NAME="Harmonium"
 BUNDLE_ID="com.sunnyjoshi.MacHarmonium"
-VERSION="1.2"
-BUILD="3"
+VERSION="1.2.1"
+BUILD="4"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ICON_SRC="$ROOT/Sources/Harmonium/Resources/AppIcon.png"
@@ -21,7 +21,12 @@ echo "==> Scaffolding app bundle"
 rm -rf "$DIST"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$RELEASE/$EXEC_NAME" "$APP/Contents/MacOS/$EXEC_NAME"
-cp -R "$RELEASE/${EXEC_NAME}_${EXEC_NAME}.bundle" "$APP/Contents/Resources/"
+# Copy resources into the app's own (valid) bundle rather than shipping SwiftPM's
+# generated Harmonium_Harmonium.bundle, which has no Info.plist and is rejected as an
+# invalid bundle on stricter Macs (crashing Bundle.module at launch). Lands them at
+# Contents/Resources/Resources/, matching the "Resources" subdirectory the code requests
+# via Bundle.main. See Sources/Harmonium/AppResources.swift.
+cp -R "$ROOT/Sources/Harmonium/Resources" "$APP/Contents/Resources/"
 
 echo "==> Building AppIcon.icns"
 ICONSET="$DIST/AppIcon.iconset"
