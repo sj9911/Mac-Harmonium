@@ -33,6 +33,8 @@ Move the lid to pump air, press the keys to play. A harmonium hiding inside your
 
    Now open Mac Harmonium from your Applications folder like any other app.
 
+---
+
 <details>
 <summary><b>Prefer not to touch Terminal? Use the built-in override instead</b></summary>
 
@@ -46,6 +48,8 @@ Move the lid to pump air, press the keys to play. A harmonium hiding inside your
 That **Open Anyway** button only appears for about an hour after the app is blocked, so do this right after step 1. Once you open it this way, Mac Harmonium launches normally every time after.
 
 </details>
+
+---
 
 ### Is it safe?
 
