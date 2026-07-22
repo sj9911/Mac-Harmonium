@@ -21,22 +21,6 @@ Move the lid to pump air, press the keys to play. A harmonium hiding inside your
 
 </div>
 
-## How to play
-
-1. Launch the app.
-2. **Pump air** by gently moving your laptop lid (or click and drag the bellows on screen with your mouse).
-3. While there is air, press the **A S D F G H J** keys to play the sargam notes:
-
-<div align="center">
-
-| Key | A | S | D | F | G | H | J |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Note** | Sa | Re | Ga | Ma | Pa | Dha | Ni |
-
-</div>
-
-It is polyphonic, so hold several keys for chords. Notes swell while you pump and fade when you stop. No air, no sound, just like the real thing.
-
 ## Install
 
 1. **[Download Mac Harmonium](https://github.com/sj9911/Mac-Harmonium/releases/latest/download/Mac-Harmonium.dmg)** (`Mac-Harmonium.dmg`).
@@ -49,14 +33,19 @@ It is polyphonic, so hold several keys for chords. Notes swell while you pump an
 
    Now open Mac Harmonium from your Applications folder like any other app.
 
-   **Prefer not to touch Terminal?** Use macOS's built-in override instead:
+<details>
+<summary><b>Prefer not to touch Terminal? Use the built-in override instead</b></summary>
 
-   1. Double-click **Mac Harmonium** in Applications. macOS blocks it and shows a dialog offering only **Done** or **Move to Trash**. Click **Done** (do not move it to Trash).
-   2. Open **System Settings**, then go to **Privacy & Security**.
-   3. Scroll down to the **Security** section. You will see a line like "Mac Harmonium was blocked to protect your Mac." with an **Open Anyway** button beside it. Click **Open Anyway**.
-   4. Confirm with Touch ID or your password, then click **Open Anyway** once more in the final dialog.
+<br/>
 
-   That **Open Anyway** button only appears for about an hour after the app is blocked, so do this right after step 1. Once you open it this way, Mac Harmonium launches normally every time after.
+1. Double-click **Mac Harmonium** in Applications. macOS blocks it and shows a dialog offering only **Done** or **Move to Trash**. Click **Done** (do not move it to Trash).
+2. Open **System Settings**, then go to **Privacy & Security**.
+3. Scroll down to the **Security** section. You will see a line like "Mac Harmonium was blocked to protect your Mac." with an **Open Anyway** button beside it. Click **Open Anyway**.
+4. Confirm with Touch ID or your password, then click **Open Anyway** once more in the final dialog.
+
+That **Open Anyway** button only appears for about an hour after the app is blocked, so do this right after step 1. Once you open it this way, Mac Harmonium launches normally every time after.
+
+</details>
 
 ### Is it safe?
 
@@ -68,6 +57,10 @@ Yes, and you don't have to take my word for it:
 ### Why the extra step?
 
 Apple's notarization needs their Developer Program, which runs $99 a year. This is a free project I built for fun, so I haven't signed up yet. Recent versions of macOS also removed the old right-click and Open shortcut, so the one-line Terminal command above is the most reliable way in. If it grows into something people genuinely use and it feels worth it, I'd happily get it notarized. Thanks for bearing with it. 🙏
+
+---
+
+Want to build it yourself, install via Homebrew, or verify the checksum?
 
 <details>
 <summary><b>For developers (Homebrew, build from source, checksum)</b></summary>
@@ -97,6 +90,22 @@ shasum -a 256 Mac-Harmonium.dmg
 ```
 
 </details>
+
+## How to play
+
+1. Launch the app.
+2. **Pump air** by gently moving your laptop lid (or click and drag the bellows on screen with your mouse).
+3. While there is air, press the **A S D F G H J** keys to play the sargam notes:
+
+<div align="center">
+
+| Key | A | S | D | F | G | H | J |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Note** | Sa | Re | Ga | Ma | Pa | Dha | Ni |
+
+</div>
+
+It is polyphonic, so hold several keys for chords. Notes swell while you pump and fade when you stop. No air, no sound, just like the real thing.
 
 ## Why I built it
 
