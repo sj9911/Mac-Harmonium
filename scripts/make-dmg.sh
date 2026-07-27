@@ -5,22 +5,41 @@ set -euo pipefail
 APP_NAME="Mac Harmonium"
 EXEC_NAME="Harmonium"
 BUNDLE_ID="com.sunnyjoshi.MacHarmonium"
-VERSION="1.2.1"
-BUILD="4"
+VERSION="1.2.2"
+BUILD="5"
+
+# Universal: Apple Silicon plus Intel. The lid angle sensor debuted on the Intel
+# 2019 16-inch MacBook Pro, so an arm64-only build would exclude the very Mac that
+# introduced the feature this app is built around.
+ARCHES=(arm64 x86_64)
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ICON_SRC="$ROOT/Sources/Harmonium/Resources/AppIcon.png"
 DIST="$ROOT/dist"
 APP="$DIST/$APP_NAME.app"
 
-echo "==> Release build"
-swift build -c release --package-path "$ROOT"
-RELEASE="$ROOT/.build/release"
+echo "==> Release build (${ARCHES[*]})"
+SLICES=()
+for arch in "${ARCHES[@]}"; do
+	echo "  -> $arch"
+	swift build -c release --package-path "$ROOT" --arch "$arch"
+	SLICES+=("$ROOT/.build/$arch-apple-macosx/release/$EXEC_NAME")
+done
 
 echo "==> Scaffolding app bundle"
 rm -rf "$DIST"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$RELEASE/$EXEC_NAME" "$APP/Contents/MacOS/$EXEC_NAME"
+
+echo "==> Merging slices into a universal binary"
+lipo -create "${SLICES[@]}" -output "$APP/Contents/MacOS/$EXEC_NAME"
+# Fail loudly if a slice went missing, rather than shipping a single-arch build.
+for arch in "${ARCHES[@]}"; do
+	lipo -archs "$APP/Contents/MacOS/$EXEC_NAME" | tr ' ' '\n' | grep -qx "$arch" || {
+		echo "ERROR: $arch missing from the packaged binary" >&2
+		exit 1
+	}
+done
+echo "    $(lipo -archs "$APP/Contents/MacOS/$EXEC_NAME")"
 # Copy resources into the app's own (valid) bundle rather than shipping SwiftPM's
 # generated Harmonium_Harmonium.bundle, which has no Info.plist and is rejected as an
 # invalid bundle on stricter Macs (crashing Bundle.module at launch). Lands them at
