@@ -15,3 +15,8 @@ DerivedData/
 
 # Packaging output
 dist/
+
+# Locally installed agent skills (npx skills); tooling, not part of the app
+.agents/
+.claude/skills/
+skills-lock.json
