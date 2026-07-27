@@ -9,7 +9,7 @@ Move the lid to pump air, press the keys to play. A harmonium hiding inside your
 ![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-000000?style=flat-square)
 ![Swift](https://img.shields.io/badge/Swift-6.2-F05138?style=flat-square&logo=swift&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-2E7DFF?style=flat-square)
-[![VirusTotal](https://img.shields.io/badge/VirusTotal-0%2F44%20clean-3BD671?style=flat-square)](https://www.virustotal.com/gui/file/b5cc589c597fa5308fcf9e5f2bc8184006640c07fa59f2f16168c63bc4ac6cec)
+[![VirusTotal](https://img.shields.io/badge/VirusTotal-0%2F57%20clean-3BD671?style=flat-square)](https://www.virustotal.com/gui/file/87681c58257601a728cff73f516867b62be3cebfab7ed7ff016e1192335b84c1)
 ![Stars](https://img.shields.io/github/stars/sj9911/Mac-Harmonium?style=flat-square&color=E11D2A)
 ![Vibecoded with Claude](https://img.shields.io/badge/vibecoded%20with-Claude-D97757?style=flat-square)
 
@@ -55,7 +55,7 @@ That **Open Anyway** button only appears for about an hour after the app is bloc
 
 Yes, and you don't have to take my word for it:
 
-- **VirusTotal scan came back clean.** [Full report](https://www.virustotal.com/gui/file/b5cc589c597fa5308fcf9e5f2bc8184006640c07fa59f2f16168c63bc4ac6cec): 0 of 44 scanners flagged it.
+- **VirusTotal scan came back clean.** [Full report](https://www.virustotal.com/gui/file/87681c58257601a728cff73f516867b62be3cebfab7ed7ff016e1192335b84c1): 0 of 57 scanners flagged it.
 - **It's fully open source.** Every line is right here to read.
 
 ### Why the extra step?
@@ -90,7 +90,7 @@ Or open `Package.swift` in Xcode and press ⌘R.
 
 ```bash
 shasum -a 256 Mac-Harmonium.dmg
-# b5cc589c597fa5308fcf9e5f2bc8184006640c07fa59f2f16168c63bc4ac6cec
+# 87681c58257601a728cff73f516867b62be3cebfab7ed7ff016e1192335b84c1
 ```
 
 </details>
@@ -155,6 +155,7 @@ flowchart LR
 ## Requirements
 
 - macOS 14 (Sonoma) or later. The Liquid Glass look shows on macOS 26; older versions get a frosted fallback.
+- Universal build: runs on both Apple Silicon and Intel Macs.
 - A MacBook with a **lid angle sensor** (MacBook Pro 16-inch 2019, Apple Silicon MacBook Pro, and MacBook Air M2 and later)
 - No sensor? You can still play by dragging the bellows with your mouse.
 
