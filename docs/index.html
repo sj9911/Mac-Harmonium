@@ -1105,7 +1105,7 @@ function connectPresence() {
     let n;
     try { n = JSON.parse(e.data).online; } catch { return; }
     if (!(n >= 1)) return;
-    presenceText.textContent = n === 1 ? 'just you here right now' : n + ' people playing right now';
+    presenceText.textContent = n + ' people playing right now';
     presenceEl.hidden = false;
   };
   sock.onclose = () => { presenceEl.hidden = true; setTimeout(connectPresence, 30000); };
