@@ -3,16 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mac Harmonium — play it in your browser</title>
-<meta name="description" content="The bellows were in your laptop all along. Move the lid to pump air, press the keys to play — right in Chrome, via WebHID.">
-<meta property="og:title" content="Mac Harmonium — play it in your browser">
-<meta property="og:description" content="Move your MacBook lid to pump air, press A–J to play. WebHID + Web Audio.">
+<title>Mac Harmonium: Play a Harmonium Online with Your MacBook Lid</title>
+<meta name="description" content="Play a free harmonium in your browser. Rock your MacBook's lid to pump the bellows and press A to J to play sargam notes. No install, works in Chrome and Edge.">
+<link rel="canonical" href="https://harmonium.lol/">
+<meta property="og:title" content="Mac Harmonium: Play a Harmonium Online with Your MacBook Lid">
+<meta property="og:description" content="Rock your MacBook lid to pump air, press A to J to play. Free, no install, runs in Chrome and Edge.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mac Harmonium">
 <meta property="og:image" content="https://harmonium.lol/social-preview.png">
 <meta property="og:url" content="https://harmonium.lol/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://harmonium.lol/social-preview.png">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Mac Harmonium",
+  "url": "https://harmonium.lol/",
+  "description": "Play a harmonium in your browser. Your MacBook's lid pumps the bellows and the keyboard plays sargam notes.",
+  "applicationCategory": "MusicApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Chrome or Edge for lid pumping via WebHID",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Sunny Joshi", "url": "https://sunnyjoshi.com" }
+}
+</script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   [hidden] { display: none !important; }   /* beats any display:flex on the same element */
@@ -492,7 +509,7 @@ function tryBridge() {
     bridgeLive = true;
     connectBtn.hidden = true;
     lidUpdate(angle);
-    setStatus('ok', 'Lid: ' + Math.round(lid.angle) + '° — realtime ⚡');
+    setStatus('ok', 'Lid: ' + Math.round(lid.angle) + '° (realtime ⚡)');
   };
   sock.onclose = () => {
     if (bridgeLive) {
