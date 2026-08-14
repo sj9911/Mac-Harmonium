@@ -87,6 +87,12 @@
   .dot { width: 8px; height: 8px; border-radius: 50%; background: #c5c5c2; }
   .dot.ok { background: #1ec74a; }
   .dot.err { background: #f51e2b; }
+  .dot.live { background: #1ec74a; animation: livepulse 2.2s ease-in-out infinite; }
+  @keyframes livepulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(30,199,74,.45); }
+    50% { box-shadow: 0 0 0 5px rgba(30,199,74,0); }
+  }
+  #presence { font-size: 12px; padding: 5px 12px; }
   button#connect {
     font: inherit; font-size: 13px; font-weight: 600; color: #fff;
     background: #1e1e1e; border: 0; border-radius: 999px;
@@ -203,18 +209,6 @@
   .wcard .linklike:hover { color: rgba(0,0,0,.75); }
   #permStatus { max-width: 410px; color: rgba(0,0,0,.55); }
   #permStatus:empty { display: none; }   /* no phantom gap when there's no message */
-  /* dev preview — remove before launch */
-  #devPreview {
-    position: absolute; bottom: 14px; left: 0; right: 0;
-    display: flex; justify-content: center; align-items: center; gap: 6px;
-    font-size: 10.5px; color: rgba(0,0,0,.35);
-  }
-  #devPreview button {
-    font: inherit; font-size: 10.5px; color: rgba(0,0,0,.5);
-    background: rgba(255,255,255,.6); border: 1px dashed rgba(0,0,0,.25);
-    border-radius: 999px; padding: 3px 9px; cursor: pointer;
-  }
-  #devPreview button:hover { color: #000; border-style: solid; }
   canvas#fx { position: fixed; inset: 0; z-index: 200; pointer-events: none; }
 
   @media (max-width: 700px) {
@@ -278,6 +272,7 @@
 
 <div id="hud">
   <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Checking…</span></span>
+  <span class="pill" id="presence" hidden><span class="dot live"></span><span id="presenceText"></span></span>
   <button id="connect" hidden>Connect lid sensor</button>
   <span class="pill" id="hint" hidden>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:rgba(0,0,0,.55)"><path d="M12 3v18"/><path d="M9 6l3 -3l3 3"/><path d="M9 18l3 3l3 -3"/></svg>
@@ -348,16 +343,6 @@
     <button id="skipBtn" class="linklike">Skip, I'll use the mouse instead</button>
   </div>
 
-  <!-- DEV PREVIEW — remove this block (and its CSS/JS) before launch -->
-  <div id="devPreview">
-    <span>preview:</span>
-    <button data-p="mac">Mac</button>
-    <button data-p="mac-nohid">Mac · no HID</button>
-    <button data-p="other">Other device</button>
-    <button data-p="ask">Permission ask</button>
-    <button data-p="nosensor">No sensor</button>
-    <button data-p="success">Success 🎉</button>
-  </div>
 </div>
 <canvas id="fx"></canvas>
 <div id="tip">
@@ -883,6 +868,8 @@ const IS_MAC = /Mac/.test(navigator.userAgent)
   && !/iPhone|iPad|iPod/.test(navigator.userAgent)
   && navigator.maxTouchPoints < 2;
 const HAS_HID = !!navigator.hid;
+const IS_MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+  || navigator.maxTouchPoints > 1;
 
 function applyPlatformCopy(mode) {
   const t = {
@@ -904,13 +891,19 @@ function applyPlatformCopy(mode) {
       tip: 'pump air by dragging the bellows',
       hint: 'Drag the bellows up and down to pump air and hear the notes',
     },
+    'mobile': {
+      pill: 'Mac Harmonium only works on a Mac for now. Open harmonium.lol on a MacBook.',
+      note: 'You can still tap the keys and drag the bellows here to hear the sound.',
+      tip: 'pump air by dragging the bellows',
+      hint: 'Drag the bellows up and down to pump air and hear the notes',
+    },
   }[mode];
   document.getElementById('wpillText').textContent = t.pill;
   document.getElementById('wnoteText').textContent = t.note;
   document.getElementById('tipPump').textContent = t.tip;
   document.getElementById('hintText').textContent = t.hint;
 }
-applyPlatformCopy(!IS_MAC ? 'other' : !HAS_HID ? 'mac-nohid' : 'mac');
+applyPlatformCopy(!IS_MAC ? (IS_MOBILE ? 'mobile' : 'other') : !HAS_HID ? 'mac-nohid' : 'mac');
 
 const NO_SENSOR_MSG = 'Is the device list empty? Then your Mac doesn’t have the sensor. It’s in MacBook Pro (2019 and newer) and MacBook Air (M2, 2022 and newer). You can still play with your mouse and keyboard.';
 function setPermDefault() {
@@ -1000,22 +993,6 @@ document.getElementById('introBtn').addEventListener('click', () => {
   showWelcome();
 });
 if (!localStorage.getItem('didSeeWelcome_v1')) showWelcome();
-
-// dev preview — remove before launch
-document.querySelectorAll('#devPreview button').forEach(b => b.addEventListener('click', () => {
-  const p = b.dataset.p;
-  if (p === 'mac' || p === 'mac-nohid' || p === 'other') {
-    applyPlatformCopy(p);
-    permCard.hidden = true;
-    welcomeCard.hidden = false;
-  } else {
-    welcomeCard.hidden = true;
-    permCard.hidden = false;
-    setPermDefault();
-    if (p === 'nosensor') permStatus.textContent = NO_SENSOR_MSG;
-    if (p === 'success') { ensureAudio(); setPermSuccess(); celebrate(); }
-  }
-}));
 
 // ---------- Celebration: a small confetti burst + a warm chime ----------
 const fxCanvas = document.getElementById('fx');
@@ -1116,6 +1093,24 @@ setInterval(() => {   // 0.25s lifecycle tick: show ~4s, then 30s cooldown
     emptyTicks = 0;
   }
 }, 250);
+
+// ---------- Live player count (WebSocket presence counter on Railway) ----------
+const presenceEl = document.getElementById('presence');
+const presenceText = document.getElementById('presenceText');
+function connectPresence() {
+  let sock;
+  try { sock = new WebSocket('wss://harmonium-presence-production.up.railway.app'); }
+  catch { setTimeout(connectPresence, 30000); return; }
+  sock.onmessage = e => {
+    let n;
+    try { n = JSON.parse(e.data).online; } catch { return; }
+    if (!(n >= 1)) return;
+    presenceText.textContent = n === 1 ? 'just you here right now' : n + ' people playing right now';
+    presenceEl.hidden = false;
+  };
+  sock.onclose = () => { presenceEl.hidden = true; setTimeout(connectPresence, 30000); };
+}
+connectPresence();
 
 // Autoplay policy: wake the AudioContext on any first interaction.
 addEventListener('pointerdown', ensureAudio, { once: true });

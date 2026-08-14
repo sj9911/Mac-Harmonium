@@ -1,0 +1,12 @@
+{
+  "name": "harmonium-presence",
+  "version": "1.0.0",
+  "description": "Live player count for harmonium.lol",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
