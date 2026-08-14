@@ -20,3 +20,4 @@ dist/
 .agents/
 .claude/skills/
 skills-lock.json
+server/
