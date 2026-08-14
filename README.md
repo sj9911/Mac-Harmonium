@@ -19,6 +19,9 @@ Move the lid to pump air, press the keys to play. A harmonium hiding inside your
 
 <sub>macOS 14+ · free · open source</sub>
 
+<sub>or <b><a href="https://harmonium.lol/">🌐 play it at harmonium.lol</a></b> — no install needed. Chrome or Edge reads the same lid sensor via WebHID.<br>
+(macOS limits browsers to ~1 lid reading per second; for realtime response run <code>swift scripts/lid-bridge.swift</code> alongside)</sub>
+
 </div>
 
 ## Install

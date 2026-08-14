@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mac Harmonium — play it in your browser</title>
+<meta name="description" content="The bellows were in your laptop all along. Move the lid to pump air, press the keys to play — right in Chrome, via WebHID.">
+<meta property="og:title" content="Mac Harmonium — play it in your browser">
+<meta property="og:description" content="Move your MacBook lid to pump air, press A–J to play. WebHID + Web Audio.">
+<meta property="og:image" content="https://harmonium.lol/social-preview.png">
+<meta property="og:url" content="https://harmonium.lol/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://harmonium.lol/social-preview.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  [hidden] { display: none !important; }   /* beats any display:flex on the same element */
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body { touch-action: manipulation; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: #e6e5e2;
+    background-image: radial-gradient(120% 90% at 50% 0%, #efeeeb 0%, #e0dfdc 60%, #d6d5d2 100%);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  canvas#dots { position: fixed; inset: 0; }
+
+  #stage {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 56px 64px 72px;
+  }
+  #instrument {
+    display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+    filter: drop-shadow(0 8px 2px rgba(0,0,0,.22)) drop-shadow(0 22px 6px rgba(0,0,0,.14))
+            drop-shadow(0 38px 14px rgba(0,0,0,.10));
+  }
+  #pump { cursor: grab; touch-action: none; }
+  #pump.grabbing { cursor: grabbing; }
+  #pump img { display: block; width: 100%; }
+  #bellows {
+    background-image: url(img/bellow-mid-stretch.webp);
+    background-size: 100% 20%;
+    background-repeat: repeat-y;
+  }
+  #base { position: relative; }
+  #base > img.layer { display: block; width: 100%; }
+  #base > img.key {
+    position: absolute; inset: 0; width: 100%;
+    opacity: 0; transition: opacity .06s ease-out;
+  }
+  #base > img.key.on { opacity: 1; }
+  .hit { position: absolute; cursor: pointer; touch-action: none; }
+
+  #hud {
+    position: fixed; top: 16px; left: 0; right: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    pointer-events: none;
+  }
+  #hud > * { pointer-events: auto; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.72); backdrop-filter: blur(12px);
+    border: 1px solid rgba(0,0,0,.08); border-radius: 999px;
+    padding: 7px 14px; font-size: 13px; color: #3a3a3a;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #c5c5c2; }
+  .dot.ok { background: #1ec74a; }
+  .dot.err { background: #f51e2b; }
+  button#connect {
+    font: inherit; font-size: 13px; font-weight: 600; color: #fff;
+    background: #1e1e1e; border: 0; border-radius: 999px;
+    padding: 8px 16px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.15);
+  }
+  button#connect:hover { background: #333; }
+  #tip {
+    position: fixed; bottom: 18px; left: 0; right: 0; text-align: center;
+    font-size: 12.5px; color: rgba(0,0,0,.45); pointer-events: none;
+  }
+  #tip a { color: rgba(0,0,0,.55); pointer-events: auto; }
+  #hint { opacity: 0; transform: translateY(-8px); transition: opacity .35s ease, transform .35s cubic-bezier(.34,1.3,.44,1); }
+  #hint.show { opacity: 1; transform: none; }
+
+  /* ---- Corner badges (version + credit) ---- */
+  .glass {
+    background: rgba(255,255,255,.72); backdrop-filter: blur(12px);
+    border: 1px solid rgba(0,0,0,.08); box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  }
+  #bl {
+    position: fixed; left: 18px; bottom: 18px; z-index: 10;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #version {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; font-weight: 500; letter-spacing: .5px;
+    color: rgba(0,0,0,.4); border-radius: 999px; padding: 6px 12px;
+  }
+  #introBtn {
+    font: inherit; font-size: 11.5px; font-weight: 500;
+    color: rgba(0,0,0,.55); border-radius: 999px; padding: 5px 12px;
+    cursor: pointer; transition: color .15s;
+  }
+  #introBtn:hover { color: rgba(0,0,0,.85); }
+  #credit {
+    position: fixed; right: 18px; bottom: 18px; z-index: 10;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 14px;
+  }
+  #infoBtn {
+    width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(0,0,0,.5); padding: 0; font: inherit;
+  }
+  #infoBtn svg { width: 17px; height: 17px; }
+  #credit:hover #infoBtn, #credit.open #infoBtn { color: rgba(0,0,0,.75); }
+  #creditCard {
+    width: 288px; padding: 22px; border-radius: 22px; text-align: left;
+    opacity: 0; transform: translateY(10px) scale(.96); transform-origin: bottom right;
+    pointer-events: none;
+    transition: opacity .3s ease, transform .35s cubic-bezier(.34,1.3,.44,1);
+  }
+  #credit:hover #creditCard, #credit.open #creditCard {
+    opacity: 1; transform: none; pointer-events: auto;
+  }
+  #creditCard .who { display: flex; align-items: center; gap: 13px; margin-bottom: 16px; }
+  #creditCard .who img {
+    width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+    border: 1px solid rgba(255,255,255,.5);
+  }
+  #creditCard .name { font-size: 16px; font-weight: 600; color: rgba(0,0,0,.85); }
+  #creditCard .madewith {
+    display: flex; align-items: center; gap: 5px; margin-top: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 9.5px; font-weight: 500; letter-spacing: 1px; color: rgba(0,0,0,.42);
+  }
+  .heart { width: 11px; height: 11px; color: #E11D2A; animation: heartbeat 1.51s infinite; }
+  @keyframes heartbeat {  /* lub–dub … rest */
+    0% { transform: scale(1); } 9.3% { transform: scale(1.22); }
+    21.2% { transform: scale(1); } 30.5% { transform: scale(1.16); }
+    43.7% { transform: scale(1); } 100% { transform: scale(1); }
+  }
+  #creditCard .blurb { font-size: 12.5px; line-height: 1.55; color: rgba(0,0,0,.55); margin-bottom: 16px; }
+  #creditCard .links { display: flex; gap: 10px; margin-bottom: 16px; }
+  #creditCard .links a {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(0,0,0,.6); transition: transform .2s cubic-bezier(.34,1.4,.5,1), color .2s;
+  }
+  #creditCard .links a:hover { color: rgba(0,0,0,.95); transform: scale(1.08); }
+  #creditCard .links svg { width: 18px; height: 18px; }
+  #creditCard hr { border: 0; border-top: 1px solid rgba(0,0,0,.08); margin: 0 0 12px; }
+  #creditCard .thanks {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 8.5px; font-weight: 600; letter-spacing: 1px; color: rgba(0,0,0,.35);
+    margin-bottom: 6px;
+  }
+  #creditCard .cl { display: block; font-size: 11px; color: rgba(0,0,0,.5); text-decoration: none; margin-top: 6px; }
+  #creditCard .cl:hover { color: rgba(0,0,0,.8); text-decoration: underline; }
+
+  /* ---- First-run welcome ---- */
+  #welcome {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(247,246,244,.72);
+    backdrop-filter: blur(22px) saturate(1.1);
+    -webkit-backdrop-filter: blur(22px) saturate(1.1);
+    transition: opacity .5s ease;
+  }
+  #welcome.leaving { opacity: 0; pointer-events: none; }
+  .wcard {
+    display: flex; flex-direction: column; align-items: center; gap: 22px;
+    padding: 40px; text-align: center;
+    opacity: 0; transform: scale(.9) translateY(10px);
+    transition: opacity .6s ease, transform .6s cubic-bezier(.34,1.3,.44,1);
+  }
+  #welcome.in .wcard { opacity: 1; transform: none; }
+  #welcome.leaving .wcard { opacity: 0; transform: scale(.94) translateY(-36px); }
+  .wemoji { font-size: 40px; }
+  .wcard h1 { font-size: 23px; font-weight: 600; color: rgba(0,0,0,.88); margin-top: 8px; }
+  .wcard .linklike {
+    font: inherit; font-size: 12.5px; font-weight: 500; color: rgba(0,0,0,.45);
+    background: none; border: 0; cursor: pointer; text-decoration: underline;
+  }
+  .wcard .linklike:hover { color: rgba(0,0,0,.75); }
+  #permStatus { max-width: 410px; color: rgba(0,0,0,.55); }
+  #permStatus:empty { display: none; }   /* no phantom gap when there's no message */
+  /* dev preview — remove before launch */
+  #devPreview {
+    position: absolute; bottom: 14px; left: 0; right: 0;
+    display: flex; justify-content: center; align-items: center; gap: 6px;
+    font-size: 10.5px; color: rgba(0,0,0,.35);
+  }
+  #devPreview button {
+    font: inherit; font-size: 10.5px; color: rgba(0,0,0,.5);
+    background: rgba(255,255,255,.6); border: 1px dashed rgba(0,0,0,.25);
+    border-radius: 999px; padding: 3px 9px; cursor: pointer;
+  }
+  #devPreview button:hover { color: #000; border-style: solid; }
+  canvas#fx { position: fixed; inset: 0; z-index: 200; pointer-events: none; }
+
+  @media (max-width: 700px) {
+    #stage { padding: 60px 16px 56px; }
+    #tip { font-size: 10.5px; padding: 0 10px; }
+    #hud .pill { font-size: 11.5px; max-width: 92vw; }
+    .wcard { padding: 24px 16px; gap: 16px; }
+    #bl { bottom: 14px; left: 12px; }
+    #credit { bottom: 14px; right: 12px; }
+  }
+  .wsub { font-size: 13.5px; line-height: 1.6; color: rgba(0,0,0,.5); margin-top: 6px; }
+  #chips { display: flex; justify-content: space-between; width: 410px; max-width: 86vw; }
+  .chip {
+    width: 40px; height: 52px; border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: rgba(255,255,255,.4); border: 1px solid var(--cb);
+    color: #26242f;
+    animation: chipPulse 4.2s linear infinite;
+    animation-delay: var(--d);
+  }
+  .chip b { font-size: 18px; font-weight: 700; color: inherit; }
+  .chip span { font-size: 10.5px; font-weight: 500; color: inherit; opacity: .62; }
+  @keyframes chipPulse {  /* attack 0.14s, decay 0.8s of a 4.2s cycle */
+    0%    { background-color: rgba(255,255,255,.4); color: #26242f; transform: scale(1); box-shadow: none; }
+    3.33% { background-color: var(--c); color: #fff; transform: scale(1.12); box-shadow: 0 2px 11px var(--cs); }
+    22.4% { background-color: rgba(255,255,255,.4); color: #26242f; transform: scale(1); box-shadow: none; }
+    100%  { background-color: rgba(255,255,255,.4); color: #26242f; transform: scale(1); box-shadow: none; }
+  }
+  .wpill {
+    display: flex; align-items: center; justify-content: flex-start; text-align: left; gap: 11px;
+    width: 410px; max-width: 86vw; box-sizing: border-box; padding: 12px 18px;
+    background: rgba(255,255,255,.4); border: 1px solid rgba(255,255,255,.5);
+    border-radius: 14px; font-size: 13px; font-weight: 500; line-height: 1.55; color: rgba(0,0,0,.72);
+  }
+  .wpill svg { width: 17px; height: 17px; color: rgba(0,0,0,.45); flex: none; }
+  .wnote { font-size: 12.5px; font-weight: 500; line-height: 1.55; color: rgba(0,0,0,.5); }
+  #startBtn, #grantBtn {
+    font: inherit; font-size: 14.5px; font-weight: 600; color: #fff;
+    background: #F51E2B; border: 0; border-radius: 999px;
+    padding: 10px 34px; cursor: pointer; margin-top: 6px;
+    transition: transform .15s ease;
+  }
+  #startBtn:hover, #grantBtn:hover { transform: scale(1.04); }
+</style>
+</head>
+<body>
+<canvas id="dots"></canvas>
+
+<div id="stage">
+  <div id="instrument">
+    <div id="pump">
+      <img id="topcap" src="img/top2.webp" alt="" draggable="false">
+      <div id="bellows"></div>
+    </div>
+    <div id="base">
+      <img class="layer" src="img/base.webp" alt="Harmonium" draggable="false">
+      <!-- key overlays + hit zones injected by JS -->
+    </div>
+  </div>
+</div>
+
+<div id="hud">
+  <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Checking…</span></span>
+  <button id="connect" hidden>Connect lid sensor</button>
+  <span class="pill" id="hint" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:rgba(0,0,0,.55)"><path d="M12 3v18"/><path d="M9 6l3 -3l3 3"/><path d="M9 18l3 3l3 -3"/></svg>
+    <b style="font-weight:500;color:rgba(0,0,0,.7)" id="hintText">Tilt your screen to pump air and hear the notes</b>
+  </span>
+</div>
+
+<div id="bl">
+  <div id="version" class="glass">v1.2.2 · experimental</div>
+  <button id="introBtn" class="glass">🪗 Intro</button>
+</div>
+
+<div id="credit">
+  <div id="creditCard" class="glass">
+    <div class="who">
+      <img src="img/avatar.webp" alt="Sunny Joshi">
+      <div>
+        <div class="name">Sunny Joshi</div>
+        <div class="madewith">MADE WITH
+          <svg class="heart" viewBox="0 0 24 24" fill="currentColor"><path d="M6.979 3.074a6 6 0 0 1 4.988 1.425l.037 .033l.034 -.03a6 6 0 0 1 4.733 -1.44l.246 .036a6 6 0 0 1 3.364 10.008l-.18 .185l-.048 .041l-7.45 7.379a1 1 0 0 1 -1.313 .082l-.094 -.082l-7.493 -7.422a6 6 0 0 1 3.176 -10.215z"/></svg>
+        &amp; CLAUDE</div>
+      </div>
+    </div>
+    <div class="blurb">Thanks for playing! I built this to learn vibecoding. It's open source.<br><br>Everything runs in your browser. The lid data never leaves your machine.</div>
+    <div class="links">
+      <a class="glass" href="https://github.com/sj9911" target="_blank" rel="noopener" title="GitHub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></svg></a>
+      <a class="glass" href="https://www.linkedin.com/in/thesunnyjoshi/" target="_blank" rel="noopener" title="LinkedIn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11v5"/><path d="M8 8v.01"/><path d="M12 16v-5"/><path d="M16 16v-3a2 2 0 1 0 -4 0"/><path d="M3 7a4 4 0 0 1 4 -4h10a4 4 0 0 1 4 4v10a4 4 0 0 1 -4 4h-10a4 4 0 0 1 -4 -4l0 -10"/></svg></a>
+      <a class="glass" href="https://sunnyjoshi.com/?utm_source=web-harmonium-credits" target="_blank" rel="noopener" title="Website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/></svg></a>
+    </div>
+    <hr>
+    <div class="thanks">WITH THANKS TO</div>
+    <a class="cl" href="https://github.com/samhenrigold/LidAngleSensor" target="_blank" rel="noopener">Sam Gold · Lid Angle Sensor</a>
+    <a class="cl" href="https://github.com/Rocktopus101/Hingemonium" target="_blank" rel="noopener">Rocktopus101 · Original idea</a>
+  </div>
+  <button id="infoBtn" class="glass" aria-label="About">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 9h.01"/><path d="M11 12h1v4h1"/></svg>
+  </button>
+</div>
+
+<div id="welcome" hidden>
+  <div id="welcomeCard" class="wcard">
+    <div>
+      <div class="wemoji">🪗</div>
+      <h1>Meet your harmonium</h1>
+      <div class="wsub">An experimental web version. Each key plays one note of the sargam scale.</div>
+    </div>
+    <div id="chips"></div>
+    <div class="wpill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M5 6m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z"/></svg>
+      <span id="wpillText">Rock your MacBook's lid back and forth to pump air, like bellows</span>
+    </div>
+    <div class="wnote" id="wnoteText">You can also drag the bellows with your mouse and click the keys.</div>
+    <button id="startBtn">Start playing</button>
+  </div>
+
+  <div id="permCard" class="wcard" hidden>
+    <div>
+      <div class="wemoji" id="permEmoji">🔐</div>
+      <h1 id="permTitle">Allow access to the lid sensor</h1>
+      <div class="wsub" id="permSub">To pump with your lid, this page needs permission to read your<br>MacBook's lid-angle sensor. That's all it reads, and it stays in your browser.</div>
+    </div>
+    <div class="wpill" id="permPill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 9h.01"/><path d="M11 12h1v4h1"/></svg>
+      <span>Click Allow below. Your browser will show a device list with one item in it: select that item, then click Connect.</span>
+    </div>
+    <div class="wnote" id="permStatus"></div>
+    <button id="grantBtn">Allow lid access</button>
+    <button id="skipBtn" class="linklike">Skip, I'll use the mouse instead</button>
+  </div>
+
+  <!-- DEV PREVIEW — remove this block (and its CSS/JS) before launch -->
+  <div id="devPreview">
+    <span>preview:</span>
+    <button data-p="mac">Mac</button>
+    <button data-p="mac-nohid">Mac · no HID</button>
+    <button data-p="other">Other device</button>
+    <button data-p="ask">Permission ask</button>
+    <button data-p="nosensor">No sensor</button>
+    <button data-p="success">Success 🎉</button>
+  </div>
+</div>
+<canvas id="fx"></canvas>
+<div id="tip">
+  Press <b>A S D F G H J</b> to play · <span id="tipPump">pump air by moving your MacBook lid, or drag the bellows</span> ·
+  <a href="https://github.com/sj9911/Mac-Harmonium">get the Mac app</a>
+</div>
+
+<script>
+'use strict';
+
+// ---------- Constants (mirrors the Mac app) ----------
+const FREQS = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88]; // Sa…Ni
+const SARGAM = ['#F51E2B','#FF6B00','#FF9A00','#1EC74A','#00C2B0','#1E7BFF','#7C4DFF'];
+const KEY_TO_NOTE = { KeyA:0, KeyS:1, KeyD:2, KeyF:3, KeyG:4, KeyH:5, KeyJ:6 };
+const TOP_ASPECT = 55 / 1444, BASE_ASPECT = 850 / 1444;
+const BELLOWS_MIN = 0.03, BELLOWS_MAX = 0.16;
+const TOTAL_ASPECT = TOP_ASPECT + BASE_ASPECT + BELLOWS_MAX;
+const KEY_X0 = 0.244, KEY_DX = 0.081;
+
+// ---------- Lid sensor (WebHID; feature report like the IOKit version) ----------
+const lid = {
+  device: null,
+  angle: 120, smoothAngle: 120, velocity: 0, signedVelocity: 0,
+  _last: 0, _lastT: 0, _lastMove: 0, _first: true, _sv: 0, _ssv: 0, _timer: null,
+};
+
+function lidUpdate(raw) {
+  const now = performance.now() / 1000;
+  if (lid._first) {
+    lid._last = raw; lid.smoothAngle = raw; lid._lastT = now; lid._lastMove = now;
+    lid._first = false; lid.angle = raw;
+    return;
+  }
+  const dt = now - lid._lastT;
+  if (dt <= 0 || dt >= 1) { lid._lastT = now; return; }
+
+  lid.smoothAngle = 0.25 * raw + 0.75 * lid.smoothAngle;
+  const delta = lid.smoothAngle - lid._last;
+  let inst = 0, signedInst = 0;
+  if (Math.abs(delta) >= 0.2) {
+    inst = Math.abs(delta / dt); signedInst = delta / dt;
+    lid._last = lid.smoothAngle;
+  }
+  if (inst > 0) {
+    lid._sv = 0.3 * inst + 0.7 * lid._sv;
+    lid._ssv = 0.3 * signedInst + 0.7 * lid._ssv;
+    lid._lastMove = now;
+  } else {
+    lid._sv *= 0.982; lid._ssv *= 0.982;
+  }
+  if (now - lid._lastMove > 0.15) { lid._sv *= 0.992; lid._ssv *= 0.992; }
+  lid._lastT = now;
+  lid.velocity = lid._sv; lid.signedVelocity = lid._ssv; lid.angle = raw;
+}
+
+// The angle is a little-endian uint16. Chrome may or may not prefix the report
+// ID byte, and some firmware reports centidegrees — try candidates until one
+// lands in 0–360.
+function parseAngle(dv) {
+  const cands = [];
+  if (dv.byteLength >= 3) cands.push(dv.getUint16(1, true));
+  if (dv.byteLength >= 2) cands.push(dv.getUint16(0, true));
+  for (const v of cands) if (v > 0 && v <= 360) return v;
+  if (cands.includes(0)) return 0;
+  for (const v of cands) if (v <= 36000) return v / 100;
+  return null;
+}
+
+async function startPolling(device) {
+  try { if (!device.opened) await device.open(); }
+  catch (e) { setStatus('err', 'Could not open the sensor: ' + e.message); return; }
+  lid.device = device;
+  setStatus('ok', 'Lid sensor connected. Move the lid to see it react.');
+  connectBtn.hidden = true;
+  let logged = 0;
+
+  const gotAngle = raw => {
+    if (bridgeLive) return;   // the 30 Hz bridge outranks the 1 Hz WebHID push
+    lidUpdate(raw);
+    setStatus('ok', 'Lid: ' + Math.round(lid.angle) + '° (browsers get ~1 update per second)');
+  };
+
+  // The sensor's descriptor declares the angle as INPUT report ID 1: a 9-bit
+  // value in degrees (0–360). The device streams it whenever the lid moves.
+  // (The native app polls it as a feature report, but browsers validate against
+  // the descriptor — no feature report is declared, so that path is rejected.)
+  device.addEventListener('inputreport', e => {
+    if (logged < 3) {
+      console.log('input report id=' + e.reportId,
+        [...new Uint8Array(e.data.buffer, e.data.byteOffset, e.data.byteLength)]);
+      logged++;
+    }
+    if (e.reportId !== 1 || e.data.byteLength < 1) return;
+    const raw = (e.data.byteLength >= 2 ? e.data.getUint16(0, true) : e.data.getUint8(0)) & 0x1FF;
+    if (raw <= 360) gotAngle(raw);
+  });
+
+  // Feature-report polling as a fallback, only if the device declares one.
+  const featureIds = [];
+  for (const c of device.collections || []) {
+    for (const r of c.featureReports || []) featureIds.push(r.reportId);
+  }
+  if (featureIds.length) {
+    lid._timer = setInterval(async () => {
+      try {
+        const raw = parseAngle(await device.receiveFeatureReport(featureIds[0]));
+        if (raw !== null) gotAngle(raw);
+      } catch (e) { /* input reports are the primary path */ }
+    }, 33);
+  }
+}
+
+const HID_FILTER = { vendorId: 0x05AC, productId: 0x8104, usagePage: 0x0020, usage: 0x008A };
+const connectBtn = document.getElementById('connect');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+function setStatus(cls, msg) { statusDot.className = 'dot ' + cls; statusText.textContent = msg; }
+
+async function initHID() {
+  if (!navigator.hid) {
+    if (!bridgeLive) setStatus('err', 'This browser can’t read the lid sensor. Use Chrome or Edge. Mouse pumping still works.');
+    return;
+  }
+  navigator.hid.addEventListener('disconnect', e => {
+    if (e.device === lid.device) {
+      clearInterval(lid._timer); lid.device = null;
+      setStatus('err', 'Sensor disconnected'); connectBtn.hidden = false;
+    }
+  });
+  // Reuse a previously granted device without prompting.
+  const granted = (await navigator.hid.getDevices()).find(d =>
+    d.vendorId === HID_FILTER.vendorId && d.productId === HID_FILTER.productId);
+  if (granted) { startPolling(granted); return; }
+  if (bridgeLive) return;
+  setStatus('', 'Want to pump air with your MacBook lid? Click the button below.');
+  connectBtn.hidden = false;
+}
+// Realtime bridge: `swift scripts/lid-bridge.swift` polls the sensor at 30 Hz
+// natively and streams it here (macOS caps WebHID's pushed reports at 1 Hz).
+// Keeps retrying quietly, so starting the bridge anytime upgrades the page live.
+let bridgeLive = false;
+function tryBridge() {
+  let sock;
+  try { sock = new WebSocket('ws://127.0.0.1:8137'); }
+  catch { setTimeout(tryBridge, 3000); return; }
+  sock.onmessage = e => {
+    const angle = +e.data;
+    if (!(angle >= 0 && angle <= 360)) return;
+    bridgeLive = true;
+    connectBtn.hidden = true;
+    lidUpdate(angle);
+    setStatus('ok', 'Lid: ' + Math.round(lid.angle) + '° — realtime ⚡');
+  };
+  sock.onclose = () => {
+    if (bridgeLive) {
+      bridgeLive = false;
+      setStatus(lid.device ? 'ok' : '', lid.device
+        ? 'Bridge stopped. Lid updates are back to about 1 per second.'
+        : 'Bridge stopped. Connect the sensor below, or restart the bridge.');
+      if (!lid.device) connectBtn.hidden = false;
+    }
+    setTimeout(tryBridge, 3000);
+  };
+}
+tryBridge();
+
+connectBtn.addEventListener('click', async () => {
+  ensureAudio();
+  try {
+    const devices = await navigator.hid.requestDevice({ filters: [HID_FILTER] });
+    if (devices.length) { await startPolling(devices[0]); celebrate(); }
+    else setStatus('', 'No device selected. MacBook Pro (2019+) and Air (M2+) have the sensor.');
+  } catch (e) { setStatus('err', e.message); }
+});
+initHID();
+
+// ---------- Audio (Web Audio port of AudioEngine.swift) ----------
+let ctx = null, master = null;
+const voices = [];
+
+function ensureAudio() {
+  if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+  ctx = new AudioContext({ sampleRate: 44100 });
+
+  // Reed timbre: same additive spectrum as the Swift wavetable.
+  const harmonics = [0, 1, .6, .5, .35, .25, .18, .13, .1, .07, .05, .04, .03];
+  const wave = ctx.createPeriodicWave(new Float32Array(harmonics.length),
+                                      Float32Array.from(harmonics));
+
+  master = ctx.createGain(); master.gain.value = 0;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 4500; lp.Q.value = 0.6;
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -18; comp.knee.value = 0; comp.ratio.value = 3;
+  comp.attack.value = 0.003; comp.release.value = 0.25;
+  master.connect(lp); lp.connect(comp); comp.connect(ctx.destination);
+
+  // Shared tremulant LFO → every oscillator's detune (±7 cents at 5.2 Hz).
+  const lfo = ctx.createOscillator(); lfo.frequency.value = 5.2;
+  const lfoGain = ctx.createGain(); lfoGain.gain.value = 7;
+  lfo.connect(lfoGain); lfo.start();
+
+  for (const f of FREQS) {
+    const env = ctx.createGain(); env.gain.value = 0; env.connect(master);
+    for (const cents of [-6, 6]) {   // the two detuned reeds
+      const osc = ctx.createOscillator();
+      osc.setPeriodicWave(wave);
+      osc.frequency.value = f;
+      osc.detune.value = cents;
+      lfoGain.connect(osc.detune);
+      osc.connect(env);
+      osc.start();
+    }
+    voices.push(env);
+  }
+}
+
+// Envelope: 50ms attack → 230ms decay to 82% → 600ms release (×0.5 reed-pair average).
+const PEAK = 0.26 * 0.5, SUSTAIN = PEAK * 0.82;
+function noteOn(i) {
+  ensureAudio();
+  const g = voices[i].gain, t = ctx.currentTime;
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+  g.linearRampToValueAtTime(PEAK, t + 0.05);
+  g.linearRampToValueAtTime(SUSTAIN, t + 0.28);
+}
+function noteOff(i) {
+  if (!ctx) return;
+  const g = voices[i].gain, t = ctx.currentTime;
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+  g.linearRampToValueAtTime(0, t + 0.6);
+}
+
+// ---------- Keys (keyboard + on-screen) ----------
+const pressed = new Set();
+const baseEl = document.getElementById('base');
+const keyImgs = [];
+'ASDFGHJ'.split('').forEach((k, i) => {
+  const img = document.createElement('img');
+  img.className = 'key'; img.src = 'img/keys/' + k + '.webp'; img.draggable = false;
+  baseEl.appendChild(img); keyImgs.push(img);
+});
+for (let i = 0; i < 7; i++) {
+  const hit = document.createElement('div');
+  hit.className = 'hit';
+  hit.addEventListener('pointerdown', e => { hit.setPointerCapture(e.pointerId); press(i); });
+  hit.addEventListener('pointerup', () => release(i));
+  hit.addEventListener('pointercancel', () => release(i));
+  baseEl.appendChild(hit);
+}
+
+function press(i) {
+  if (pressed.has(i)) return;
+  pressed.add(i); keyImgs[i].classList.add('on');
+  noteOn(i); spawnRipple(i); lastActive = performance.now();
+  countSilentTap();
+}
+function release(i) {
+  if (!pressed.delete(i)) return;
+  keyImgs[i].classList.remove('on'); noteOff(i);
+}
+
+window.addEventListener('keydown', e => {
+  const note = KEY_TO_NOTE[e.code];
+  if (note === undefined || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+  e.preventDefault(); press(note);
+});
+window.addEventListener('keyup', e => {
+  const note = KEY_TO_NOTE[e.code];
+  if (note !== undefined) release(note);
+});
+window.addEventListener('blur', () => { for (const i of [...pressed]) release(i); });
+
+// ---------- Bellows pump: lid sensor, or mouse drag fallback ----------
+let manualMode = false, dragging = false;
+let dragOpen = 0, dragStartOpen = 0, dragVel = 0;
+let lastActive = performance.now();
+let airNow = 0;
+const effVelocity = () => manualMode ? dragVel : lid.signedVelocity;
+
+const pumpEl = document.getElementById('pump');
+let dragStartY = 0, lastDragY = 0, lastDragT = 0;
+pumpEl.addEventListener('pointerdown', e => {
+  ensureAudio();
+  pumpEl.setPointerCapture(e.pointerId);
+  dragging = true; manualMode = true;
+  pumpEl.classList.add('grabbing');
+  dragStartOpen = openness();
+  dragStartY = lastDragY = e.clientY; lastDragT = performance.now();
+});
+pumpEl.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const now = performance.now(), dt = (now - lastDragT) / 1000;
+  dragOpen = Math.min(Math.max(dragStartOpen + (dragStartY - e.clientY) / 180, 0), 1);
+  if (dt > 0) {
+    const target = Math.min(Math.max((lastDragY - e.clientY) / dt / 30, -26), 26);
+    if (Math.abs(target) > Math.abs(dragVel)) dragVel = target;
+  }
+  lastDragY = e.clientY; lastDragT = now;
+});
+const endDrag = () => { dragging = false; pumpEl.classList.remove('grabbing'); };
+pumpEl.addEventListener('pointerup', endDrag);
+pumpEl.addEventListener('pointercancel', endDrag);
+
+const sensorOpen = () => Math.min(Math.abs(lid.smoothAngle - 90) / 26.7, 1);
+const openness = () => manualMode ? dragOpen : sensorOpen();
+
+// ---------- Layout ----------
+const instrumentEl = document.getElementById('instrument');
+const bellowsEl = document.getElementById('bellows');
+let W = 0, dispBellows = BELLOWS_MIN;
+
+function layout() {
+  const small = innerWidth < 700;
+  const availW = innerWidth - (small ? 32 : 128), availH = innerHeight - (small ? 150 : 128);
+  W = Math.max(Math.min(availW, availH / TOTAL_ASPECT), 200) * 0.85;
+  instrumentEl.style.width = W + 'px';
+  instrumentEl.style.height = (W * TOTAL_ASPECT) + 'px';
+  const baseH = W * BASE_ASPECT;
+  document.querySelectorAll('.hit').forEach((hit, i) => {
+    const w = KEY_DX * W, h = 0.34 * baseH;
+    hit.style.width = w + 'px'; hit.style.height = h + 'px';
+    hit.style.left = ((KEY_X0 + i * KEY_DX) * W - w / 2) + 'px';
+    hit.style.top = (0.725 * baseH - h / 2) + 'px';
+  });
+}
+addEventListener('resize', layout);
+layout();
+
+// ---------- Main tick (pump physics + bellows + dots) ----------
+const canvas = document.getElementById('dots');
+const dctx = canvas.getContext('2d');
+let ripples = [];
+function spawnRipple(note) {
+  ripples.push({ t: performance.now(), x: 0.30 + 0.40 * (note / 6), y: 0.62, note });
+  if (ripples.length > 40) ripples.splice(0, ripples.length - 40);
+}
+setInterval(() => { for (const i of pressed) spawnRipple(i); }, 1400);
+
+function resizeCanvas() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+  canvas.style.width = innerWidth + 'px'; canvas.style.height = innerHeight + 'px';
+  dctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+const SPACING = 26, RIPPLE_SPEED = 340, RIPPLE_LIFE = 3.6, BAND = 54, PUSH = 10;
+
+function drawDots(now) {
+  dctx.clearRect(0, 0, innerWidth, innerHeight);
+  const active = ripples.filter(r => (now - r.t) / 1000 < RIPPLE_LIFE);
+  ripples = active;
+  const driftY = Math.max(-34, Math.min(34, (lid.smoothAngle - 90) * 0.7));
+  const pre = active.map(r => {
+    const age = (now - r.t) / 1000, c = SARGAM[r.note];
+    return { ox: r.x * innerWidth, oy: r.y * innerHeight,
+             radius: age * RIPPLE_SPEED, fade: 1 - age / RIPPLE_LIFE,
+             R: parseInt(c.slice(1, 3), 16), G: parseInt(c.slice(3, 5), 16), B: parseInt(c.slice(5, 7), 16),
+             minD2: (age * RIPPLE_SPEED - BAND) ** 2, maxD2: (age * RIPPLE_SPEED + BAND) ** 2 };
+  });
+
+  // Pass 1: all untouched dots into ONE shared path; lit dots collected for pass 2.
+  const lit = [];
+  dctx.beginPath();
+  for (let y = SPACING / 2; y < innerHeight; y += SPACING) {
+    for (let x = SPACING / 2; x < innerWidth; x += SPACING) {
+      let opacity = 0.06, scale = 1, dx = 0, dy = 0, cr = 0, cg = 0, cb = 0, cw = 0;
+      for (const r of pre) {
+        const vx = x - r.ox, vy = y - r.oy;
+        const d2 = vx * vx + vy * vy;
+        if (d2 < r.minD2 || d2 > r.maxD2) continue;   // cheap ring test, no sqrt
+        const dist = Math.sqrt(d2);
+        const band = Math.abs(dist - r.radius);
+        if (band < BAND) {
+          const boost = (1 - band / BAND) * r.fade;
+          opacity += 0.6 * boost; scale += 2 * boost;
+          if (dist > 0.001) { dx += vx / dist * PUSH * boost; dy += vy / dist * PUSH * boost; }
+          cr += r.R * boost; cg += r.G * boost; cb += r.B * boost;
+          cw += boost;
+        }
+      }
+      if (cw === 0) {   // resting dot → shared batch (single fill below)
+        const py = y + driftY;
+        dctx.moveTo(x + 1.4, py);
+        dctx.arc(x, py, 1.4, 0, 7);
+      } else {
+        lit.push({ px: x + dx, py: y + dy + driftY, rad: 1.4 * scale,
+                   R: cr / cw | 0, G: cg / cw | 0, B: cb / cw | 0, opacity, cw });
+      }
+    }
+  }
+  dctx.fillStyle = 'rgba(0,0,0,0.06)';
+  dctx.fill();
+
+  // Pass 2: ripple-lit dots (a few hundred at most) drawn individually.
+  for (const d of lit) {
+    if (d.cw > 0.04) {  // bloom halo
+      dctx.fillStyle = `rgba(${d.R},${d.G},${d.B},${Math.min(d.opacity, 0.7) * 0.35})`;
+      dctx.beginPath(); dctx.arc(d.px, d.py, d.rad * 3.2, 0, 7); dctx.fill();
+    }
+    dctx.fillStyle = `rgba(${d.R},${d.G},${d.B},${Math.min(d.opacity, 0.85)})`;
+    dctx.beginPath(); dctx.arc(d.px, d.py, d.rad, 0, 7); dctx.fill();
+  }
+}
+
+// ---------- Air flow (streaks + current lines, mirrors AirFlow) ----------
+const STREAKS = 24, CURRENTS = 7;
+let flowPhase = 0, flowI = 0, flowT = 0;
+const wrap = (v, w) => ((v % w) + w) % w;
+
+function drawStreak(x, y, w, len, hue, alpha) {
+  if (alpha <= 0.004) return;
+  const g = dctx.createLinearGradient(x, y, x, y + len);
+  g.addColorStop(0, `hsla(${hue},89%,55%,0)`);
+  g.addColorStop(0.5, `hsla(${hue},89%,55%,${alpha})`);
+  g.addColorStop(1, `hsla(${hue},89%,55%,0)`);
+  dctx.fillStyle = g;
+  dctx.beginPath();
+  dctx.roundRect(x - w / 2, y, w, len, w / 2);
+  dctx.fill();
+}
+
+function drawAirFlow(dt) {
+  const v = effVelocity();
+  flowI += (Math.min(Math.abs(v) / 10, 1) - flowI) * 0.12;
+  flowPhase += v * dt * 22;
+  flowT += dt;
+  if (flowI <= 0.01) return;
+  const span = innerHeight + 320;
+  for (let i = 0; i < CURRENTS; i++) {   // long, faint, slower current lines
+    const x = (i + 0.5) / CURRENTS * innerWidth;
+    const y = wrap(((i * 0.6180339887) % 1) * span + flowPhase * 0.55, span) - 160;
+    const shimmer = 0.6 + 0.4 * Math.sin(flowT * 1.1 + i * 0.8);
+    drawStreak(x, y, 3, 220 + (i % 3) * 80, i / CURRENTS * 360, 0.16 * flowI * shimmer);
+  }
+  for (let i = 0; i < STREAKS; i++) {    // short, quick, shimmering streaks
+    const x = (i + 0.5) / STREAKS * innerWidth;
+    const y = wrap(((i * 0.3819660113) % 1) * span + flowPhase, span) - 160;
+    const shimmer = 0.55 + 0.45 * Math.sin(flowT * 1.8 + i * 0.7);
+    drawStreak(x, y, 2.4, 42 + (i % 5) * 16, i / STREAKS * 360, 0.32 * flowI * shimmer);
+  }
+}
+
+// ---------- Tilt glow (edge bloom follows pump direction, mirrors TiltGlow) ----------
+let downI = 0, upI = 0, glowT = 0;
+let gcr = 0.55 * 255, gcg = 0.56 * 255, gcb = 0.62 * 255;
+
+function drawEdge(intensity, top) {
+  if (intensity <= 0.01) return;
+  const edgeY = top ? 0 : innerHeight, ph = top ? 0 : 1.7;
+  const reach = innerHeight * 0.6 * Math.min(intensity, 1);
+  const radius = Math.max(reach * (1 + 0.12 * Math.sin(glowT * 1.3 + ph)), 1);
+  const cx = innerWidth * 0.5 + 26 * Math.sin(glowT * 0.9 + ph);
+  const a = Math.min(intensity, 1) * 0.55 * (0.85 + 0.15 * Math.sin(glowT * 2.0 + ph));
+  const g = dctx.createRadialGradient(cx, edgeY, 0, cx, edgeY, radius);
+  g.addColorStop(0, `rgba(${gcr | 0},${gcg | 0},${gcb | 0},${a})`);
+  g.addColorStop(1, `rgba(${gcr | 0},${gcg | 0},${gcb | 0},0)`);
+  dctx.save();                     // stretch horizontally → wider than tall
+  dctx.translate(cx, edgeY); dctx.scale(1.9, 1); dctx.translate(-cx, -edgeY);
+  dctx.fillStyle = g;
+  dctx.fillRect(cx - radius * 1.5, edgeY - radius, radius * 3, radius * 2);
+  dctx.restore();
+}
+
+function drawTiltGlow(dt) {
+  const v = effVelocity(), mag = Math.abs(v), thr = 2.5;
+  const downTarget = v < -thr ? Math.min(mag / 14, 1) : 0;
+  const upTarget = v > thr ? Math.min(mag / 14, 1) : 0;
+  downI += (downTarget - downI) * (downTarget > downI ? 0.20 : 0.04);  // rise fast, fall slow
+  upI += (upTarget - upI) * (upTarget > upI ? 0.20 : 0.04);
+  if (pressed.size) {   // color eases toward the held chord
+    let r = 0, g = 0, b = 0;
+    for (const n of pressed) {
+      const c = SARGAM[n];
+      r += parseInt(c.slice(1, 3), 16); g += parseInt(c.slice(3, 5), 16); b += parseInt(c.slice(5, 7), 16);
+    }
+    gcr += (r / pressed.size - gcr) * 0.10;
+    gcg += (g / pressed.size - gcg) * 0.10;
+    gcb += (b / pressed.size - gcb) * 0.10;
+  }
+  glowT += dt;
+  drawEdge(downI, true);
+  drawEdge(upI, false);
+}
+
+let lastFrame = performance.now();
+function tick(now) {
+  const dt = Math.min((now - lastFrame) / 1000, 0.1);
+  lastFrame = now;
+
+  // Pump physics (mirrors ContentView.pumpTick)
+  if (manualMode) {
+    dragVel *= Math.pow(0.991, dt * 60);
+    if (Math.abs(dragVel) < 0.03) dragVel = 0;
+    if (lid.velocity > 3) manualMode = false;   // real lid takes over
+  }
+  const vmag = manualMode ? Math.abs(dragVel) : lid.velocity;
+  const air = Math.min(vmag / (manualMode ? 15 : 18), 1);
+  airNow = air;
+  if (master) master.gain.setTargetAtTime(air, ctx.currentTime, 0.02);
+
+  // Idle: settle the bellows after 1.5s of stillness
+  if (vmag > 1 || pressed.size || dragging) lastActive = now;
+  const resting = now - lastActive > 1500;
+  const target = resting ? BELLOWS_MIN
+    : BELLOWS_MIN + (BELLOWS_MAX - BELLOWS_MIN) * Math.min(Math.max(openness(), 0), 1);
+  dispBellows += (target - dispBellows) * (resting ? 0.04 : 0.22);
+  bellowsEl.style.height = (dispBellows * W) + 'px';
+
+  drawDots(now);
+  drawAirFlow(dt);
+  drawTiltGlow(dt);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// ---------- Platform branching ----------
+// A Mac that isn't an iPad-in-disguise; the capability check is navigator.hid
+// itself (covers Chrome/Edge/Arc, not just "Chrome" by name).
+const IS_MAC = /Mac/.test(navigator.userAgent)
+  && !/iPhone|iPad|iPod/.test(navigator.userAgent)
+  && navigator.maxTouchPoints < 2;
+const HAS_HID = !!navigator.hid;
+
+function applyPlatformCopy(mode) {
+  const t = {
+    'mac': {
+      pill: 'Rock your MacBook’s lid back and forth to pump air, like bellows',
+      note: 'You can also drag the bellows with your mouse and click the keys.',
+      tip: 'pump air by moving your MacBook lid, or drag the bellows',
+      hint: 'Tilt your screen to pump air and hear the notes',
+    },
+    'mac-nohid': {
+      pill: 'This browser can’t read the lid sensor. Open this page in Chrome or Edge to pump with your lid.',
+      note: 'You can still play here: drag the bellows with your mouse and press the keys.',
+      tip: 'pump air by dragging the bellows (lid pumping needs Chrome or Edge)',
+      hint: 'Drag the bellows up and down to pump air and hear the notes',
+    },
+    'other': {
+      pill: 'Lid pumping only works on a MacBook. Open this page on a MacBook to try it.',
+      note: 'On this device: drag the bellows to pump air, press the keys to play.',
+      tip: 'pump air by dragging the bellows',
+      hint: 'Drag the bellows up and down to pump air and hear the notes',
+    },
+  }[mode];
+  document.getElementById('wpillText').textContent = t.pill;
+  document.getElementById('wnoteText').textContent = t.note;
+  document.getElementById('tipPump').textContent = t.tip;
+  document.getElementById('hintText').textContent = t.hint;
+}
+applyPlatformCopy(!IS_MAC ? 'other' : !HAS_HID ? 'mac-nohid' : 'mac');
+
+const NO_SENSOR_MSG = 'Is the device list empty? Then your Mac doesn’t have the sensor. It’s in MacBook Pro (2019 and newer) and MacBook Air (M2, 2022 and newer). You can still play with your mouse and keyboard.';
+function setPermDefault() {
+  document.getElementById('permEmoji').textContent = '🔐';
+  document.getElementById('permTitle').textContent = 'Allow access to the lid sensor';
+  document.getElementById('permSub').innerHTML = 'To pump with your lid, this page needs permission to read your<br>MacBook’s lid-angle sensor. That’s all it reads, and it stays in your browser.';
+  document.getElementById('permPill').hidden = false;
+  document.getElementById('grantBtn').hidden = false;
+  document.getElementById('skipBtn').hidden = false;
+  document.getElementById('permStatus').textContent = '';
+}
+function setPermSuccess() {
+  document.getElementById('permEmoji').textContent = '🪗';
+  document.getElementById('permTitle').textContent = 'Lid sensor connected';
+  document.getElementById('permSub').innerHTML = 'Rock your lid slowly and hold any key from A to J to hear it.';
+  document.getElementById('permPill').hidden = true;
+  document.getElementById('grantBtn').hidden = true;
+  document.getElementById('skipBtn').hidden = true;
+  document.getElementById('permStatus').textContent = '';
+}
+
+// ---------- First-run welcome (mirrors WelcomeView.swift) ----------
+const NOTE_NAMES = ['Sa', 'Re', 'Ga', 'Ma', 'Pa', 'Dha', 'Ni'];
+const welcomeEl = document.getElementById('welcome');
+const chips = document.getElementById('chips');
+SARGAM.forEach((c, i) => {
+  const R = parseInt(c.slice(1, 3), 16), G = parseInt(c.slice(3, 5), 16), B = parseInt(c.slice(5, 7), 16);
+  const d = document.createElement('div');
+  d.className = 'chip';
+  d.style.setProperty('--c', c);
+  d.style.setProperty('--cs', `rgba(${R},${G},${B},.6)`);
+  d.style.setProperty('--cb', `rgba(${R},${G},${B},.3)`);
+  d.style.animationDelay = (0.8 + i * 0.4) + 's';   // the sargam cascade
+  d.innerHTML = `<b>${'ASDFGHJ'[i]}</b><span>${NOTE_NAMES[i]}</span>`;
+  chips.appendChild(d);
+});
+const welcomeCard = document.getElementById('welcomeCard');
+const permCard = document.getElementById('permCard');
+const permStatus = document.getElementById('permStatus');
+
+function showWelcome() {
+  welcomeCard.hidden = false;
+  permCard.hidden = true;
+  welcomeEl.classList.remove('leaving', 'in');
+  welcomeEl.hidden = false;   // unhiding restarts the cascade animations
+  requestAnimationFrame(() => requestAnimationFrame(() => welcomeEl.classList.add('in')));
+}
+function closeWelcome() {
+  welcomeEl.classList.add('leaving');
+  setTimeout(() => { welcomeEl.hidden = true; welcomeEl.classList.remove('leaving', 'in'); }, 550);
+}
+// Show the permission panel only where it can succeed: a Mac with WebHID and
+// no sensor connection yet (via grant or bridge).
+const permEligible = () => IS_MAC && HAS_HID && !lid.device && !bridgeLive;
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  localStorage.setItem('didSeeWelcome_v1', '1');
+  ensureAudio();   // the click doubles as the audio-unlock gesture
+  if (!permEligible()) { closeWelcome(); return; }
+  welcomeEl.classList.remove('in');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    welcomeCard.hidden = true;
+    permCard.hidden = false;
+    welcomeEl.classList.add('in');
+  }));
+});
+document.getElementById('skipBtn').addEventListener('click', closeWelcome);
+document.getElementById('grantBtn').addEventListener('click', async () => {
+  ensureAudio();
+  permStatus.textContent = '';
+  try {
+    const devices = await navigator.hid.requestDevice({ filters: [HID_FILTER] });
+    if (!devices.length) {
+      permStatus.textContent = NO_SENSOR_MSG;
+      return;
+    }
+    await startPolling(devices[0]);
+    celebrate();
+    setPermSuccess();
+    setTimeout(closeWelcome, 3800);
+  } catch (e) {
+    permStatus.textContent = e.message;
+  }
+});
+document.getElementById('introBtn').addEventListener('click', () => {
+  setPermDefault();   // restore the permission panel for a replay
+  showWelcome();
+});
+if (!localStorage.getItem('didSeeWelcome_v1')) showWelcome();
+
+// dev preview — remove before launch
+document.querySelectorAll('#devPreview button').forEach(b => b.addEventListener('click', () => {
+  const p = b.dataset.p;
+  if (p === 'mac' || p === 'mac-nohid' || p === 'other') {
+    applyPlatformCopy(p);
+    permCard.hidden = true;
+    welcomeCard.hidden = false;
+  } else {
+    welcomeCard.hidden = true;
+    permCard.hidden = false;
+    setPermDefault();
+    if (p === 'nosensor') permStatus.textContent = NO_SENSOR_MSG;
+    if (p === 'success') { ensureAudio(); setPermSuccess(); celebrate(); }
+  }
+}));
+
+// ---------- Celebration: a small confetti burst + a warm chime ----------
+const fxCanvas = document.getElementById('fx');
+const fxCtx = fxCanvas.getContext('2d');
+let fxParts = [], fxRunning = false;
+
+function successChime() {
+  if (!ctx) return;
+  const t0 = ctx.currentTime + 0.03;
+  const out = ctx.createGain();
+  out.gain.value = 0.5;
+  out.connect(ctx.destination);
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {   // C E G C — a rising major chord
+    const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = f;
+    const g = ctx.createGain(); g.gain.value = 0;
+    const t = t0 + i * 0.09;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.16, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+    o.connect(g); g.connect(out);
+    o.start(t); o.stop(t + 1);
+  });
+}
+
+function celebrate() {
+  successChime();
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  fxCanvas.width = innerWidth * dpr; fxCanvas.height = innerHeight * dpr;
+  fxCanvas.style.width = innerWidth + 'px'; fxCanvas.style.height = innerHeight + 'px';
+  fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cx = innerWidth / 2, cy = innerHeight * 0.42;
+  for (let i = 0; i < 90; i++) {
+    const ang = Math.random() * Math.PI * 2, sp = 2.5 + Math.random() * 6.5;
+    fxParts.push({
+      x: cx + (Math.random() - 0.5) * 60, y: cy + (Math.random() - 0.5) * 30,
+      vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 5.5,
+      w: 3 + Math.random() * 4, h: 2 + Math.random() * 3,
+      rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.35,
+      c: SARGAM[i % 7], life: 1,
+    });
+  }
+  if (!fxRunning) { fxRunning = true; requestAnimationFrame(fxTick); }
+}
+
+function fxTick() {
+  fxCtx.clearRect(0, 0, innerWidth, innerHeight);
+  fxParts = fxParts.filter(p => p.life > 0);
+  for (const p of fxParts) {
+    p.vy += 0.16;                       // gravity
+    p.vx *= 0.985; p.vy *= 0.99;        // drag
+    p.x += p.vx; p.y += p.vy;
+    p.rot += p.vr;
+    p.life -= 1 / 110;                  // ~1.8s
+    fxCtx.save();
+    fxCtx.translate(p.x, p.y);
+    fxCtx.rotate(p.rot);
+    fxCtx.globalAlpha = Math.max(p.life, 0);
+    fxCtx.fillStyle = p.c;
+    fxCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    fxCtx.restore();
+  }
+  if (fxParts.length) requestAnimationFrame(fxTick);
+  else { fxRunning = false; fxCtx.clearRect(0, 0, innerWidth, innerHeight); }
+}
+
+// ---------- Credit card: hover on desktop, tap to toggle on touch ----------
+const creditEl = document.getElementById('credit');
+document.getElementById('infoBtn').addEventListener('click', e => {
+  e.stopPropagation(); creditEl.classList.toggle('open');
+});
+document.addEventListener('pointerdown', e => {
+  if (!creditEl.contains(e.target)) creditEl.classList.remove('open');
+});
+
+// ---------- Hint banner: keys tapped with no air (mirrors ContentView) ----------
+const hintEl = document.getElementById('hint');
+hintEl.hidden = false;
+let silentTaps = 0, emptyTicks = 0, hintTicks = 0, cooldownTicks = 0, hintShown = false;
+function countSilentTap() {
+  if (airNow >= 0.08 || hintShown || cooldownTicks > 0) return;
+  if (++silentTaps >= 4) {
+    hintShown = true; hintTicks = 0; silentTaps = 0;
+    hintEl.classList.add('show');
+  }
+}
+setInterval(() => {   // 0.25s lifecycle tick: show ~4s, then 30s cooldown
+  if (hintShown) {
+    hintTicks++;
+    if (hintTicks >= 16 || airNow > 0.08) {
+      hintShown = false; hintEl.classList.remove('show');
+      cooldownTicks = 120; silentTaps = 0;
+    }
+  } else if (cooldownTicks > 0) {
+    cooldownTicks--; silentTaps = 0;
+  } else if (!pressed.size) {
+    if (++emptyTicks >= 4) silentTaps = 0;
+  } else {
+    emptyTicks = 0;
+  }
+}, 250);
+
+// Autoplay policy: wake the AudioContext on any first interaction.
+addEventListener('pointerdown', ensureAudio, { once: true });
+addEventListener('keydown', ensureAudio, { once: true });
+</script>
+</body>
+</html>
