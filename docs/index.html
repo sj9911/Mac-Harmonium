@@ -202,41 +202,74 @@
   #permStatus[role="alert"] { color: rgba(0,0,0,.64); }
   .picker-demo {
     width: 410px; max-width: 86vw; padding: 10px;
-    background: rgba(34,33,31,.9); border: 1px solid rgba(0,0,0,.24);
+    color-scheme: light;
+    --picker-shell: rgba(248,248,250,.94);
+    --picker-border: rgba(0,0,0,.16);
+    --picker-ink: #242428;
+    --picker-muted: rgba(0,0,0,.52);
+    --picker-dialog: #fff;
+    --picker-dialog-border: rgba(0,0,0,.18);
+    --picker-row-border: rgba(0,0,0,.22);
+    --picker-row-ink: rgba(0,0,0,.86);
+    --picker-button-border: rgba(0,0,0,.35);
+    --picker-button-ink: rgba(0,0,0,.7);
+    --picker-disabled: #e1e1e6;
+    --picker-disabled-ink: rgba(0,0,0,.38);
+    --picker-step: rgba(0,0,0,.09);
+    background: var(--picker-shell); border: 1px solid var(--picker-border);
     border-radius: 16px; box-shadow: 0 12px 28px rgba(0,0,0,.16);
-    color: #f3f2ef; text-align: left;
+    color: var(--picker-ink); text-align: left;
   }
   .picker-demo__bar {
     display: flex; align-items: center; gap: 6px; padding: 0 4px 9px;
-    font-size: 10px; font-weight: 600; letter-spacing: .02em; color: rgba(255,255,255,.58);
+    font-size: 10px; font-weight: 600; letter-spacing: .02em; color: var(--picker-muted);
   }
   .picker-demo__bar i { width: 6px; height: 6px; border-radius: 50%; background: #f51e2b; box-shadow: 10px 0 #ff9a00, 20px 0 #1ec74a; margin-right: 19px; }
-  .picker-demo__dialog { padding: 14px; border-radius: 10px; background: #18191b; border: 1px solid rgba(255,255,255,.16); }
+  .picker-demo__dialog { padding: 14px; border-radius: 10px; background: var(--picker-dialog); border: 1px solid var(--picker-dialog-border); }
   .picker-demo__title { font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
-  .picker-demo__label { margin: 12px 0 6px; font-size: 10px; font-weight: 600; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .08em; }
+  .picker-demo__label { margin: 12px 0 6px; font-size: 10px; font-weight: 600; color: var(--picker-muted); text-transform: uppercase; letter-spacing: .08em; }
   .picker-demo__device {
     display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 8px 10px;
-    border: 1px solid rgba(255,255,255,.2); border-radius: 7px; font-size: 12px; color: rgba(255,255,255,.9);
+    border: 1px solid var(--picker-row-border); border-radius: 7px; font-size: 12px; color: var(--picker-row-ink);
     animation: deviceSelect 5.4s ease-in-out infinite;
   }
-  .picker-demo__device svg { width: 16px; height: 16px; color: rgba(255,255,255,.64); flex: none; }
+  .picker-demo__device svg { width: 16px; height: 16px; color: var(--picker-muted); flex: none; }
   .picker-demo__device b { font-weight: 650; }
   .picker-demo__footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 13px; }
   .picker-demo__cancel, .picker-demo__connect { border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 11px; font-weight: 650; }
-  .picker-demo__cancel { border: 1px solid rgba(255,255,255,.32); color: rgba(255,255,255,.82); }
-  .picker-demo__connect { color: rgba(255,255,255,.45); background: rgba(255,255,255,.15); animation: connectReady 5.4s ease-in-out infinite; }
-  .picker-demo__steps { display: flex; gap: 7px; margin-top: 10px; padding: 0 2px; font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,.66); }
+  .picker-demo__cancel { border: 1px solid var(--picker-button-border); color: var(--picker-button-ink); }
+  .picker-demo__connect { color: var(--picker-disabled-ink); background: var(--picker-disabled); animation: connectReady 5.4s ease-in-out infinite; }
+  .picker-demo__steps { display: flex; gap: 7px; margin-top: 10px; padding: 0 2px; font-size: 10.5px; font-weight: 600; color: var(--picker-muted); }
   .picker-demo__step { display: flex; align-items: center; gap: 5px; }
-  .picker-demo__step b { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; font-size: 9px; }
+  .picker-demo__step b { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--picker-step); color: var(--picker-ink); font-size: 9px; }
   @keyframes deviceSelect {
-    0%, 17%, 100% { background: transparent; border-color: rgba(255,255,255,.2); transform: none; }
-    27%, 73% { background: #2b5796; border-color: #7eaaf0; transform: scale(1.012); }
-    84% { background: #2b5796; border-color: #7eaaf0; transform: none; }
+    0%, 17%, 100% { background: transparent; border-color: var(--picker-row-border); transform: none; }
+    27%, 73% { background: #2b5796; border-color: #7eaaf0; color: #fff; transform: scale(1.012); }
+    84% { background: #2b5796; border-color: #7eaaf0; color: #fff; transform: none; }
   }
   @keyframes connectReady {
-    0%, 25%, 100% { background: rgba(255,255,255,.15); color: rgba(255,255,255,.45); transform: none; }
+    0%, 25%, 100% { background: var(--picker-disabled); color: var(--picker-disabled-ink); transform: none; }
     32%, 73% { background: #b7cffd; color: #192235; transform: none; }
     82% { background: #b7cffd; color: #192235; transform: scale(.94); }
+  }
+  @media (prefers-color-scheme: dark) {
+    .picker-demo {
+      color-scheme: dark;
+      --picker-shell: rgba(34,33,31,.9);
+      --picker-border: rgba(0,0,0,.24);
+      --picker-ink: #f3f2ef;
+      --picker-muted: rgba(255,255,255,.58);
+      --picker-dialog: #18191b;
+      --picker-dialog-border: rgba(255,255,255,.16);
+      --picker-row-border: rgba(255,255,255,.2);
+      --picker-row-ink: rgba(255,255,255,.9);
+      --picker-button-border: rgba(255,255,255,.32);
+      --picker-button-ink: rgba(255,255,255,.82);
+      --picker-disabled: rgba(255,255,255,.15);
+      --picker-disabled-ink: rgba(255,255,255,.45);
+      --picker-step: rgba(255,255,255,.14);
+    }
+    .picker-demo__device svg { color: rgba(255,255,255,.64); }
   }
   @media (prefers-reduced-motion: reduce) {
     .picker-demo__device, .picker-demo__connect { animation: none; }
@@ -315,7 +348,7 @@
 </div>
 
 <div id="bl">
-  <div id="version" class="glass">v1.2.2 · experimental</div>
+  <div id="version" class="glass">v1.2.3 · experimental</div>
 </div>
 
 <div id="credit">
