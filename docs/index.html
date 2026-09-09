@@ -199,6 +199,50 @@
   .wcard .linklike:hover { color: rgba(0,0,0,.75); }
   #permStatus { max-width: 410px; color: rgba(0,0,0,.55); }
   #permStatus:empty { display: none; }   /* no phantom gap when there's no message */
+  #permStatus[role="alert"] { color: rgba(0,0,0,.64); }
+  .picker-demo {
+    width: 410px; max-width: 86vw; padding: 10px;
+    background: rgba(34,33,31,.9); border: 1px solid rgba(0,0,0,.24);
+    border-radius: 16px; box-shadow: 0 12px 28px rgba(0,0,0,.16);
+    color: #f3f2ef; text-align: left;
+  }
+  .picker-demo__bar {
+    display: flex; align-items: center; gap: 6px; padding: 0 4px 9px;
+    font-size: 10px; font-weight: 600; letter-spacing: .02em; color: rgba(255,255,255,.58);
+  }
+  .picker-demo__bar i { width: 6px; height: 6px; border-radius: 50%; background: #f51e2b; box-shadow: 10px 0 #ff9a00, 20px 0 #1ec74a; margin-right: 19px; }
+  .picker-demo__dialog { padding: 14px; border-radius: 10px; background: #18191b; border: 1px solid rgba(255,255,255,.16); }
+  .picker-demo__title { font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
+  .picker-demo__label { margin: 12px 0 6px; font-size: 10px; font-weight: 600; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .08em; }
+  .picker-demo__device {
+    display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 8px 10px;
+    border: 1px solid rgba(255,255,255,.2); border-radius: 7px; font-size: 12px; color: rgba(255,255,255,.9);
+    animation: deviceSelect 5.4s ease-in-out infinite;
+  }
+  .picker-demo__device svg { width: 16px; height: 16px; color: rgba(255,255,255,.64); flex: none; }
+  .picker-demo__device b { font-weight: 650; }
+  .picker-demo__footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 13px; }
+  .picker-demo__cancel, .picker-demo__connect { border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 11px; font-weight: 650; }
+  .picker-demo__cancel { border: 1px solid rgba(255,255,255,.32); color: rgba(255,255,255,.82); }
+  .picker-demo__connect { color: rgba(255,255,255,.45); background: rgba(255,255,255,.15); animation: connectReady 5.4s ease-in-out infinite; }
+  .picker-demo__steps { display: flex; gap: 7px; margin-top: 10px; padding: 0 2px; font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,.66); }
+  .picker-demo__step { display: flex; align-items: center; gap: 5px; }
+  .picker-demo__step b { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; font-size: 9px; }
+  @keyframes deviceSelect {
+    0%, 17%, 100% { background: transparent; border-color: rgba(255,255,255,.2); transform: none; }
+    27%, 73% { background: #2b5796; border-color: #7eaaf0; transform: scale(1.012); }
+    84% { background: #2b5796; border-color: #7eaaf0; transform: none; }
+  }
+  @keyframes connectReady {
+    0%, 25%, 100% { background: rgba(255,255,255,.15); color: rgba(255,255,255,.45); transform: none; }
+    32%, 73% { background: #b7cffd; color: #192235; transform: none; }
+    82% { background: #b7cffd; color: #192235; transform: scale(.94); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .picker-demo__device, .picker-demo__connect { animation: none; }
+    .picker-demo__device { background: #2b5796; border-color: #7eaaf0; }
+    .picker-demo__connect { background: #b7cffd; color: #192235; }
+  }
   canvas#fx { position: fixed; inset: 0; z-index: 200; pointer-events: none; }
 
   @media (max-width: 700px) {
@@ -242,6 +286,7 @@
     transition: transform .15s ease;
   }
   #startBtn:hover, #grantBtn:hover { transform: scale(1.04); }
+  #grantBtn:disabled { cursor: wait; opacity: .72; transform: none; }
 </style>
 </head>
 <body>
@@ -323,12 +368,25 @@
       <h1 id="permTitle">Allow access to the lid sensor</h1>
       <div class="wsub" id="permSub">To pump with your lid, this page needs permission to read your<br>MacBook's lid-angle sensor. That's all it reads, and it stays in your browser.</div>
     </div>
+    <div class="picker-demo" id="pickerDemo" aria-hidden="true">
+      <div class="picker-demo__bar"><i></i>Browser device picker</div>
+      <div class="picker-demo__dialog">
+        <div class="picker-demo__title">Connect to a HID device</div>
+        <div class="picker-demo__label">Available device</div>
+        <div class="picker-demo__device">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9h8M8 13h4"/></svg>
+          <b>Unknown Device (05AC:8104)</b>
+        </div>
+        <div class="picker-demo__footer"><span class="picker-demo__cancel">Cancel</span><span class="picker-demo__connect">Connect</span></div>
+      </div>
+      <div class="picker-demo__steps"><span class="picker-demo__step"><b>1</b>Select the device</span><span class="picker-demo__step"><b>2</b>Click Connect</span></div>
+    </div>
     <div class="wpill" id="permPill">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 9h.01"/><path d="M11 12h1v4h1"/></svg>
-      <span>Click Allow below. Your browser will show a device list with one item in it: select that item, then click Connect.</span>
+      <span id="permPillText">Click Choose lid sensor below. Then, in the browser window, select <b>Unknown Device (05AC:8104)</b> and click <b>Connect</b>.</span>
     </div>
-    <div class="wnote" id="permStatus"></div>
-    <button id="grantBtn">Allow lid access</button>
+    <div class="wnote" id="permStatus" role="alert"></div>
+    <button id="grantBtn">Choose lid sensor</button>
     <button id="skipBtn" class="linklike">Skip, I'll use the mouse instead</button>
   </div>
 
@@ -883,13 +941,20 @@ function applyPlatformCopy(mode) {
 }
 applyPlatformCopy(!IS_MAC ? (IS_MOBILE ? 'mobile' : 'other') : !HAS_HID ? 'mac-nohid' : 'mac');
 
-const NO_SENSOR_MSG = 'Is the device list empty? Then your Mac doesn’t have the sensor. It’s in MacBook Pro (2019 and newer) and MacBook Air (M2, 2022 and newer). You can still play with your mouse and keyboard.';
+const NO_SENSOR_MSG = 'No lid sensor was connected. If you closed the browser window, try again. If it showed no device, your Mac may not have a compatible lid-angle sensor.';
+const grantBtn = document.getElementById('grantBtn');
+const pickerDemo = document.getElementById('pickerDemo');
+const permPillText = document.getElementById('permPillText');
 function setPermDefault() {
   document.getElementById('permEmoji').textContent = '🔐';
   document.getElementById('permTitle').textContent = 'Allow access to the lid sensor';
   document.getElementById('permSub').innerHTML = 'To pump with your lid, this page needs permission to read your<br>MacBook’s lid-angle sensor. That’s all it reads, and it stays in your browser.';
   document.getElementById('permPill').hidden = false;
-  document.getElementById('grantBtn').hidden = false;
+  pickerDemo.hidden = false;
+  grantBtn.hidden = false;
+  grantBtn.disabled = false;
+  grantBtn.textContent = 'Choose lid sensor';
+  permPillText.innerHTML = 'Click Choose lid sensor below. Then, in the browser window, select <b>Unknown Device (05AC:8104)</b> and click <b>Connect</b>.';
   document.getElementById('skipBtn').hidden = false;
   document.getElementById('permStatus').textContent = '';
 }
@@ -898,7 +963,8 @@ function setPermSuccess() {
   document.getElementById('permTitle').textContent = 'Lid sensor connected';
   document.getElementById('permSub').innerHTML = 'Rock your lid slowly and hold any key from A to J to hear it.';
   document.getElementById('permPill').hidden = true;
-  document.getElementById('grantBtn').hidden = true;
+  pickerDemo.hidden = true;
+  grantBtn.hidden = true;
   document.getElementById('skipBtn').hidden = true;
   document.getElementById('permStatus').textContent = '';
 }
@@ -949,13 +1015,22 @@ document.getElementById('startBtn').addEventListener('click', () => {
   }));
 });
 document.getElementById('skipBtn').addEventListener('click', closeWelcome);
-document.getElementById('grantBtn').addEventListener('click', async () => {
+function setPermRetry(message = NO_SENSOR_MSG) {
+  grantBtn.disabled = false;
+  grantBtn.textContent = 'Try again';
+  permPillText.innerHTML = 'The browser window opens separately. Select <b>Unknown Device (05AC:8104)</b>, then click <b>Connect</b>.';
+  permStatus.textContent = message;
+}
+
+grantBtn.addEventListener('click', async () => {
   ensureAudio();
   permStatus.textContent = '';
+  grantBtn.disabled = true;
+  grantBtn.textContent = 'Browser picker open…';
   try {
     const devices = await navigator.hid.requestDevice({ filters: [HID_FILTER] });
     if (!devices.length) {
-      permStatus.textContent = NO_SENSOR_MSG;
+      setPermRetry();
       return;
     }
     await startPolling(devices[0]);
@@ -963,7 +1038,7 @@ document.getElementById('grantBtn').addEventListener('click', async () => {
     setPermSuccess();
     setTimeout(closeWelcome, 3800);
   } catch (e) {
-    permStatus.textContent = e.message;
+    setPermRetry(e.name === 'NotAllowedError' || e.name === 'AbortError' ? NO_SENSOR_MSG : e.message);
   }
 });
 if (!localStorage.getItem('didSeeWelcome_v1')) showWelcome();
