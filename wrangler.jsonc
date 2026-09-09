@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "sj-website",
+  "compatibility_date": "2026-09-09",
+  "assets": {
+    "directory": "./docs",
+    "not_found_handling": "404-page"
+  }
+}
